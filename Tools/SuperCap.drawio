@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" version="26.0.5" pages="2">
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" version="26.0.5" pages="3">
   <diagram name="Hardware" id="1wBO0ddBioPEeexdbqvn">
     <mxGraphModel dx="724" dy="390" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
@@ -38,7 +38,59 @@
       </root>
     </mxGraphModel>
   </diagram>
-  <diagram id="e7PKB_ESbqOG_LZUhv1C" name="Page-2">
+  <diagram id="e7PKB_ESbqOG_LZUhv1C" name="StateTable">
+    <mxGraphModel dx="500" dy="269" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="buDElnwJMgMg-u5TaAtd-10" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="buDElnwJMgMg-u5TaAtd-1" target="buDElnwJMgMg-u5TaAtd-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="buDElnwJMgMg-u5TaAtd-13" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="buDElnwJMgMg-u5TaAtd-1" target="buDElnwJMgMg-u5TaAtd-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="buDElnwJMgMg-u5TaAtd-1" value="Super Cap Charging" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="120" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="buDElnwJMgMg-u5TaAtd-12" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.556;exitY=-0.005;exitDx=0;exitDy=0;entryX=0.053;entryY=0.684;entryDx=0;entryDy=0;entryPerimeter=0;exitPerimeter=0;" edge="1" parent="1" source="buDElnwJMgMg-u5TaAtd-2" target="buDElnwJMgMg-u5TaAtd-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="buDElnwJMgMg-u5TaAtd-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;startArrow=classic;startFill=1;endArrow=none;endFill=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="460" y="309.71" as="targetPoint" />
+            <mxPoint x="340" y="309.71" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="buDElnwJMgMg-u5TaAtd-2" value="Super Cap discharge" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="220" y="270" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="buDElnwJMgMg-u5TaAtd-14" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.936;entryY=0.78;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.634;exitY=0.009;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="buDElnwJMgMg-u5TaAtd-3" target="buDElnwJMgMg-u5TaAtd-1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="530" y="270" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="buDElnwJMgMg-u5TaAtd-3" value="Super Cap Standby" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="270" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="buDElnwJMgMg-u5TaAtd-17" value="Pmotor&amp;lt;Pmax" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;rotation=-60;" vertex="1" parent="1">
+          <mxGeometry x="270" y="210" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="buDElnwJMgMg-u5TaAtd-18" value="Pmotor&amp;gt;Pmax" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;rotation=-60;" vertex="1" parent="1">
+          <mxGeometry x="310" y="220" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="buDElnwJMgMg-u5TaAtd-19" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 12px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; float: none; display: inline !important;&quot;&gt;Pmotor&amp;gt;Pmax&lt;/span&gt;" style="text;whiteSpace=wrap;html=1;labelBackgroundColor=none;" vertex="1" parent="1">
+          <mxGeometry x="370" y="310" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="buDElnwJMgMg-u5TaAtd-20" value="Vcap≥Vcap_limit" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;rotation=45;" vertex="1" parent="1">
+          <mxGeometry x="470" y="200" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="buDElnwJMgMg-u5TaAtd-21" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 12px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; float: none; display: inline !important;&quot;&gt;Vcap&amp;lt;Vcap_limit&lt;/span&gt;" style="text;whiteSpace=wrap;html=1;rotation=45;textShadow=0;labelBackgroundColor=none;" vertex="1" parent="1">
+          <mxGeometry x="420" y="230" width="120" height="40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="ajSU9kIdaQgM70zCW4LD" name="CloseLoopControl">
     <mxGraphModel dx="1050" dy="565" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
