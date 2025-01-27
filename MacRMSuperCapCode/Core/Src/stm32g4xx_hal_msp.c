@@ -195,12 +195,13 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
 
     __HAL_RCC_GPIOB_CLK_ENABLE();
     /**ADC3 GPIO Configuration
+    PB0     ------> ADC3_IN12
     PB1     ------> ADC3_IN1
     */
-    GPIO_InitStruct.Pin = V_BAT_SENSE_Pin;
+    GPIO_InitStruct.Pin = V_CHASSIS_SENSE_Pin|V_BAT_SENSE_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(V_BAT_SENSE_GPIO_Port, &GPIO_InitStruct);
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* USER CODE BEGIN ADC3_MspInit 1 */
 
@@ -337,9 +338,10 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
     }
 
     /**ADC3 GPIO Configuration
+    PB0     ------> ADC3_IN12
     PB1     ------> ADC3_IN1
     */
-    HAL_GPIO_DeInit(V_BAT_SENSE_GPIO_Port, V_BAT_SENSE_Pin);
+    HAL_GPIO_DeInit(GPIOB, V_CHASSIS_SENSE_Pin|V_BAT_SENSE_Pin);
 
   /* USER CODE BEGIN ADC3_MspDeInit 1 */
 

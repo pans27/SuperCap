@@ -69,6 +69,8 @@ void Error_Handler(void);
 #define I_CHASSIS_GPIO_Port GPIOA
 #define I_CAP_Pin GPIO_PIN_1
 #define I_CAP_GPIO_Port GPIOA
+#define V_CHASSIS_SENSE_Pin GPIO_PIN_0
+#define V_CHASSIS_SENSE_GPIO_Port GPIOB
 #define V_BAT_SENSE_Pin GPIO_PIN_1
 #define V_BAT_SENSE_GPIO_Port GPIOB
 #define EN_Pin GPIO_PIN_11
