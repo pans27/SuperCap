@@ -49,8 +49,6 @@ extern "C" {
 
 /* USER CODE END EM */
 
-void HAL_HRTIM_MspPostInit(HRTIM_HandleTypeDef *hhrtim);
-
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
@@ -61,32 +59,32 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define R_Pin GPIO_PIN_1
 #define R_GPIO_Port GPIOC
-#define G_Pin GPIO_PIN_2
-#define G_GPIO_Port GPIOC
-#define B_Pin GPIO_PIN_3
+#define B_Pin GPIO_PIN_2
 #define B_GPIO_Port GPIOC
-#define I_CHASSIS_Pin GPIO_PIN_0
-#define I_CHASSIS_GPIO_Port GPIOA
-#define I_CAP_Pin GPIO_PIN_1
+#define G_Pin GPIO_PIN_3
+#define G_GPIO_Port GPIOC
+#define I_CAP_Pin GPIO_PIN_0
 #define I_CAP_GPIO_Port GPIOA
-#define V_CHASSIS_SENSE_Pin GPIO_PIN_0
-#define V_CHASSIS_SENSE_GPIO_Port GPIOB
-#define V_BAT_SENSE_Pin GPIO_PIN_1
-#define V_BAT_SENSE_GPIO_Port GPIOB
+#define VCAP_SENSE_Pin GPIO_PIN_1
+#define VCAP_SENSE_GPIO_Port GPIOA
+#define I_CHASSIS_Pin GPIO_PIN_1
+#define I_CHASSIS_GPIO_Port GPIOB
 #define EN_Pin GPIO_PIN_11
 #define EN_GPIO_Port GPIOB
 #define INL2_Pin GPIO_PIN_12
 #define INL2_GPIO_Port GPIOB
-#define INR1_Pin GPIO_PIN_14
-#define INR1_GPIO_Port GPIOB
-#define VCAP_SENSE_Pin GPIO_PIN_15
-#define VCAP_SENSE_GPIO_Port GPIOB
+#define V_BAT_SENSE_Pin GPIO_PIN_14
+#define V_BAT_SENSE_GPIO_Port GPIOB
+#define V_CHASSIS_SENSE_Pin GPIO_PIN_15
+#define V_CHASSIS_SENSE_GPIO_Port GPIOB
 #define INR2_Pin GPIO_PIN_8
 #define INR2_GPIO_Port GPIOC
 #define I_BAT_Pin GPIO_PIN_8
 #define I_BAT_GPIO_Port GPIOA
-#define INL1_Pin GPIO_PIN_10
+#define INL1_Pin GPIO_PIN_9
 #define INL1_GPIO_Port GPIOA
+#define INR1_Pin GPIO_PIN_10
+#define INR1_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 
