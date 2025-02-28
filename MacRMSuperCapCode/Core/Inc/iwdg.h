@@ -1,9 +1,9 @@
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file    hrtim.h
+  * @file    iwdg.h
   * @brief   This file contains all the function prototypes for
-  *          the hrtim.c file
+  *          the iwdg.c file
   ******************************************************************************
   * @attention
   *
@@ -18,8 +18,8 @@
   */
 /* USER CODE END Header */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __HRTIM_H__
-#define __HRTIM_H__
+#ifndef __IWDG_H__
+#define __IWDG_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,11 +32,13 @@ extern "C" {
 
 /* USER CODE END Includes */
 
+extern IWDG_HandleTypeDef hiwdg;
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
 
-void MX_HRTIM1_Init(void);
+void MX_IWDG_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
@@ -46,5 +48,5 @@ void MX_HRTIM1_Init(void);
 }
 #endif
 
-#endif /* __HRTIM_H__ */
+#endif /* __IWDG_H__ */
 
