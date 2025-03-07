@@ -23,7 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
-
+#include "pwm_ctrl.h"
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN TD */
 
@@ -309,10 +309,10 @@ void DMA1_Channel7_IRQHandler(void)
 void HRTIM1_Master_IRQHandler(void)
 {
   /* USER CODE BEGIN HRTIM1_Master_IRQn 0 */
-
+  PWM_Control();
   /* USER CODE END HRTIM1_Master_IRQn 0 */
   /* USER CODE BEGIN HRTIM1_Master_IRQn 1 */
-
+  LL_HRTIM_ClearFlag_REP(HRTIM1, LL_HRTIM_TIMER_MASTER);
   /* USER CODE END HRTIM1_Master_IRQn 1 */
 }
 

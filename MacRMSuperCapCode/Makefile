@@ -77,7 +77,8 @@ Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_pwr.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_hrtim.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_gpio.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_dma.c \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_iwdg.c
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_iwdg.c \
+$(wildcard ./User/Src/*.c) 
 
 # ASM sources
 ASM_SOURCES =  \
@@ -142,7 +143,8 @@ C_INCLUDES =  \
 -IDrivers/STM32G4xx_HAL_Driver/Inc \
 -IDrivers/STM32G4xx_HAL_Driver/Inc/Legacy \
 -IDrivers/CMSIS/Device/ST/STM32G4xx/Include \
--IDrivers/CMSIS/Include
+-IDrivers/CMSIS/Include\
+-IUser/Inc
 
 
 # compile gcc flags

@@ -29,7 +29,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "pwm_ctrl.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -105,7 +105,10 @@ int main(void)
   MX_ADC4_Init();
   MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_IWDG_Refresh(&hiwdg);
+  PWM_Init();
+  HAL_IWDG_Refresh(&hiwdg);
+  LL_HRTIM_TIM_CounterEnable(HRTIM1, LL_HRTIM_TIMER_ALL);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -180,6 +183,7 @@ void Error_Handler(void)
   __disable_irq();
   while (1)
   {
+    return;
   }
   /* USER CODE END Error_Handler_Debug */
 }
