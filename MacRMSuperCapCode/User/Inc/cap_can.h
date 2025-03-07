@@ -1,0 +1,27 @@
+#ifndef CAP_CAN_H
+#define CAP_CAN_H
+
+#include <stdint.h>
+
+// CAN communication defines
+#define CAN_TX_ID    0x100   // CAN transmit ID
+#define CAN_RX_ID    0x101   // CAN receive ID
+
+typedef struct capcan_rx_t{
+    uint16_t power_limit;
+    uint16_t rsvd1;
+    uint16_t rsvd2;
+}capcan_rx_t;
+
+typedef struct capcan_tx_t{
+    uint16_t current_chassis_power;
+    uint16_t current_battery_power;
+    uint16_t cap_voltage;
+    uint16_t cap_state;
+}capcan_tx_t;
+
+void CAN_Init(void);
+void CAN_SendData(capcan_tx_t *data);
+void CAN_ReceiveData(capcan_rx_t *data);
+
+#endif // CAP_CAN_H
