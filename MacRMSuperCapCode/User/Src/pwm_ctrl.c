@@ -13,11 +13,11 @@ void PWM_Init(void){
     HAL_ADCEx_Calibration_Start(&hadc3, ADC_SINGLE_ENDED);
     HAL_ADCEx_Calibration_Start(&hadc4, ADC_SINGLE_ENDED);
     HAL_ADCEx_Calibration_Start(&hadc5, ADC_SINGLE_ENDED);
-
-    LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TA1); // enable HRTIM outputs
-    LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TB1);
-    LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TC1);
-    LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TE1);
+    // enable HRTIM outputs
+    LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TA2); //INL1
+    LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TB1); //INR1
+    LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TC1); //INL2
+    LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TE1); //INR2
 
     HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&pwm_adc.v_cap, 1); // start ADCs
     HAL_ADC_Start_DMA(&hadc2, (uint32_t*)&pwm_adc.i_cap, 1);
@@ -36,12 +36,27 @@ void PWM_Init(void){
     LL_HRTIM_EnableIT_REP(HRTIM1, LL_HRTIM_TIMER_MASTER);
     pwm_data.cap_state = CAP_READY;
 }
+
+__STATIC_INLINE int checkCompVal(int val){
+    if(val<PWM_COMPARE_MINVAL){
+        return PWM_COMPARE_MINVAL;
+    }else if(val>PWM_PERIOD-100){
+        return PWM_PERIOD-100;
+    }else{
+        return val;
+    }
+}
+
 /*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
 void PWM_SetPhase(uint8_t phase){
-    LL_HRTIM_TIM_SetCompare1(HRTIM1, LL_HRTIM_TIMER_A, phase);
-    LL_HRTIM_TIM_SetCompare1(HRTIM1, LL_HRTIM_TIMER_B, phase);
-    LL_HRTIM_TIM_SetCompare1(HRTIM1, LL_HRTIM_TIMER_C, phase);
-    LL_HRTIM_TIM_SetCompare1(HRTIM1, LL_HRTIM_TIMER_E, phase);
+    int phaseA = PWM_COMPARE_MINVAL;
+    int phaseB = PWM_COMPARE_MINVAL;
+    int phaseC = checkCompVal(PWM_COMPARE_MINVAL + toCompareVal(phase));
+    int phaseE = checkCompVal(PWM_COMPARE_MINVAL + toCompareVal(phase));
+    LL_HRTIM_TIM_SetCompare1(HRTIM1, LL_HRTIM_TIMER_MASTER, phaseA);
+    LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_MASTER, phaseB);
+    LL_HRTIM_TIM_SetCompare3(HRTIM1, LL_HRTIM_TIMER_MASTER, phaseC);
+    LL_HRTIM_TIM_SetCompare4(HRTIM1, LL_HRTIM_TIMER_MASTER, phaseE);
 }
 /*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
 void PWM_SetDutyCycle(uint8_t dutyCycle){

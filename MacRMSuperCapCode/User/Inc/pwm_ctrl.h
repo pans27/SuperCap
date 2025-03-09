@@ -9,8 +9,9 @@
 #include <stdint.h>
 
 // Define PWM frequency and resolution
-#define PWM_PERIOD 27200 // 1 kHz
-#define toCompareVal(p) (p*DCDC_PERIOD)/100
+#define PWM_PERIOD 13600 // 400 kHz
+#define PWM_COMPARE_MINVAL (700)
+#define toCompareVal(p) (p*PWM_PERIOD)/100
 
 /************SAFETY SETTINGS**********/
 #define BUS_UVP_THRE 18.0f
