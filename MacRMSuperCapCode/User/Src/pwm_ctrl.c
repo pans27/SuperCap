@@ -60,6 +60,7 @@ void PWM_SetPhase(uint8_t phase){
 }
 /*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
 void PWM_SetDutyCycle(uint8_t dutyCycle){
+    dutyCycle = checkCompVal(toCompareVal(dutyCycle));
     LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_A, dutyCycle);
     LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_B, dutyCycle);
     LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_C, dutyCycle);
