@@ -5,6 +5,7 @@
 #include "gpio.h"
 #include "iwdg.h"
 #include "hrtim.h"
+#include "usart.h"
 #include <stdint.h>
 
 // Define PWM frequency and resolution
@@ -28,14 +29,32 @@
 #define ONTIME_FILTERSTABLE_DELAY 5
 /*************************************/
 
-typedef struct pwr_adc_t{
+typedef struct pwm_adc_t{
     uint16_t v_cap;   //ADC1_IN2 (PA1)
     uint16_t i_cap;     //ADC2_IN1 (PA0)
     uint16_t i_chassis;    //ADC3_IN1(PB1)
     uint16_t v_bat;     //ADC4_IN4(PB14)
     uint16_t v_chassis;    //ADC4_IN5(PB15)
     uint16_t i_bat;     //ADC5_IN1(PA8)
-}pwr_adc_t;
+}pwm_adc_t;
+
+typedef struct pwm_data_t
+{
+    pwm_adc_t pwm_adc;
+    uint8_t cap_state;
+    uint8_t power_limit;
+}pwm_data_t;
+
+
+enum cap_states{
+    CAP_OFF,
+    CAP_READY,
+    CAP_ON,
+    VBUS_OVP,
+    VBUS_UVP,
+    VBAT_OVP,
+};
+
 
 // Function prototypes
 void PWM_Init(void);

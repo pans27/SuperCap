@@ -30,6 +30,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "pwm_ctrl.h"
+#include "cap_can.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
