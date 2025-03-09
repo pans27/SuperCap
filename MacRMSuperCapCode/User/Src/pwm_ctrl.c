@@ -36,3 +36,17 @@ void PWM_Init(void){
     LL_HRTIM_EnableIT_REP(HRTIM1, LL_HRTIM_TIMER_MASTER);
     pwm_data.cap_state = CAP_READY;
 }
+/*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
+void PWM_SetPhase(uint8_t phase){
+    LL_HRTIM_TIM_SetCompare1(HRTIM1, LL_HRTIM_TIMER_A, phase);
+    LL_HRTIM_TIM_SetCompare1(HRTIM1, LL_HRTIM_TIMER_B, phase);
+    LL_HRTIM_TIM_SetCompare1(HRTIM1, LL_HRTIM_TIMER_C, phase);
+    LL_HRTIM_TIM_SetCompare1(HRTIM1, LL_HRTIM_TIMER_E, phase);
+}
+/*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
+void PWM_SetDutyCycle(uint8_t dutyCycle){
+    LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_A, dutyCycle);
+    LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_B, dutyCycle);
+    LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_C, dutyCycle);
+    LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_E, dutyCycle);
+}
