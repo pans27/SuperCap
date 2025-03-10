@@ -1,7 +1,10 @@
 #include "pwm_ctrl.h"
 
-pwm_adc_t pwm_adc;
 pwm_data_t pwm_data = {.cap_state = CAP_OFF, .power_limit = 50};
+
+uint32_t ready_time = 0;
+uint32_t powerup_time = 0;
+uint8_t master_counter = 0;
 // Function to initialize PWM
 void PWM_Init(void){
     HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, SET); // turn on red LED init state
@@ -19,11 +22,11 @@ void PWM_Init(void){
     LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TC1); //INL2
     LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TE1); //INR2
 
-    HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&pwm_adc.v_cap, 1); // start ADCs
-    HAL_ADC_Start_DMA(&hadc2, (uint32_t*)&pwm_adc.i_cap, 1);
-    HAL_ADC_Start_DMA(&hadc3, (uint32_t*)&pwm_adc.i_chassis, 1);
-    HAL_ADC_Start_DMA(&hadc4, (uint32_t*)&pwm_adc.v_bat, 2);
-    HAL_ADC_Start_DMA(&hadc5, (uint32_t*)&pwm_adc.i_bat, 1);
+    HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&pwm_data.pwm_adc.v_cap, 1); // start ADCs
+    HAL_ADC_Start_DMA(&hadc2, (uint32_t*)&pwm_data.pwm_adc.i_cap, 1);
+    HAL_ADC_Start_DMA(&hadc3, (uint32_t*)&pwm_data.pwm_adc.i_chassis, 1);
+    HAL_ADC_Start_DMA(&hadc4, (uint32_t*)&pwm_data.pwm_adc.v_bat, 2);
+    HAL_ADC_Start_DMA(&hadc5, (uint32_t*)&pwm_data.pwm_adc.i_bat, 1);
 
     HAL_UART_Transmit_DMA(&huart4, (uint8_t*)&pwm_data, sizeof(pwm_data)); // send UART message
 
@@ -35,6 +38,7 @@ void PWM_Init(void){
 
     LL_HRTIM_EnableIT_REP(HRTIM1, LL_HRTIM_TIMER_MASTER);
     pwm_data.cap_state = CAP_READY;
+    ready_time = HAL_GetTick();
 }
 
 __STATIC_INLINE int checkCompVal(int val){
@@ -66,4 +70,62 @@ void PWM_SetDutyCycle(uint8_t dutyCycle){
     LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_B, dutyCycle);
     LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_C, dutyCycle);
     LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_E, dutyCycle);
+}
+
+/*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
+static void fsm(void){
+    switch(pwm_data.cap_state){
+        case CAP_OFF:
+            HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, SET);
+            HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, RESET);
+            HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, RESET);
+            break;
+        case CAP_READY:
+            HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, SET);
+            HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, SET);
+            HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, RESET);
+            if(ready_time==0){
+                ready_time=HAL_GetTick();
+            }else if(HAL_GetTick()-ready_time < ONTIME_FILTERSTABLE_DELAY){
+                break;
+            }else{
+                ready_time=0;
+                pid_reset_to_voltage();
+                pwm_data.cap_state=CAP_ON;
+                powerup_time=HAL_GetTick();
+                HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, SET); // turn on fets
+            }
+            break;
+        case CAP_ON:
+            HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, RESET);
+            HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, SET);
+            HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, RESET);
+            update_pid();
+            break;
+        case VBUS_OVP:
+        case VBUS_UVP:
+        case VBAT_OVP:
+        default:
+            pwm_data.cap_state=CAP_OFF;
+    }
+}
+
+void PWM_UpdateLimits(uint8_t limit){
+    if(limit<POWER_LIMIT_MINIMUM){
+        limit=POWER_LIMIT_MINIMUM;
+    }else if(limit>POWER_LIMIT_MAXIMUM){
+        limit=POWER_LIMIT_MAXIMUM;
+    }
+    pwm_data.power_limit = limit;
+}
+
+/*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
+void PWM_control(void){
+    /*!!!!!!!!!! TO BE SET!!!!!!!!!!!!!!!*/
+    if(master_counter==5){ // limit control changes to every 5th cycle
+        master_counter = 0;
+        fsm();
+    } else{
+        master_counter++;
+    }
 }
