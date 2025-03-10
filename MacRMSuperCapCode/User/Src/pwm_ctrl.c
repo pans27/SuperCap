@@ -49,6 +49,7 @@ __STATIC_INLINE int checkCompVal(int val){
 
 /*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
 void PWM_SetPhase(uint8_t phase){
+    //currently has inl1 and inr1 in phase, inl2 and inr2 + phase
     int phaseA = PWM_COMPARE_MINVAL;
     int phaseB = PWM_COMPARE_MINVAL;
     int phaseC = checkCompVal(PWM_COMPARE_MINVAL + toCompareVal(phase));

@@ -11,7 +11,8 @@
 // Define PWM frequency and resolution
 #define PWM_PERIOD 13600 // 400 kHz
 #define PWM_COMPARE_MINVAL (700)
-#define toCompareVal(p) (p*PWM_PERIOD)/100
+//expect p = uint8_t values, 0 to 255
+#define toCompareVal(p) (p*PWM_PERIOD)/255
 
 /************SAFETY SETTINGS**********/
 #define BUS_UVP_THRE 18.0f
