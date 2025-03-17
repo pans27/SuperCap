@@ -63,6 +63,6 @@ void PWM_Init(void);
 void PWM_SetPhase(uint8_t phase);
 void PWM_SetDutyCycle(uint8_t dutyCycle);
 void PWM_Control(void);
-void PWM_UpdateLimits(uint8_t limit);
+void PWM_UpdateLimits(uint16_t limit);
 
 #endif // PWM_CTRL_H

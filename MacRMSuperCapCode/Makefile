@@ -213,7 +213,7 @@ $(BUILD_DIR):
 # clean up
 #######################################
 clean:
-	-rm -fR $(BUILD_DIR)
+	-del -fR $(BUILD_DIR)
   
 #######################################
 # dependencies

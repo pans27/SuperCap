@@ -101,7 +101,7 @@ static void fsm(void){
                 break;
             }else{
                 ready_time=0;
-                pid_reset_to_voltage();
+                //pid_reset_to_voltage();
                 pwm_data.cap_state=CAP_ON;
                 powerup_time=HAL_GetTick();
                 HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, SET); // turn on fets
@@ -111,7 +111,7 @@ static void fsm(void){
             HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, RESET);
             HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, SET);
             HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, RESET);
-            update_pid();
+            //update_pid();
             break;
         case VBUS_OVP:
         case VBUS_UVP:
@@ -131,7 +131,7 @@ void PWM_UpdateLimits(uint16_t limit){
 }
 
 /*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
-void PWM_control(void){
+void PWM_Control(void){
     /*!!!!!!!!!! TO BE SET!!!!!!!!!!!!!!!*/
     if(master_counter==5){ // limit control changes to every 5th cycle
         master_counter = 0;
