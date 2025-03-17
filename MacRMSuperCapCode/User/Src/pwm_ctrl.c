@@ -65,11 +65,22 @@ void PWM_SetPhase(uint8_t phase){
 }
 /*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
 void PWM_SetDutyCycle(uint8_t dutyCycle){
-    dutyCycle = checkCompVal(toCompareVal(dutyCycle));
-    LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_A, dutyCycle);
-    LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_B, dutyCycle);
-    LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_C, dutyCycle);
-    LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_E, dutyCycle);
+    uint8_t leftduty,rightduty;
+    //if duty cycle is less than 50%, left side is duty cycle, right side is 100%
+    //if duty cycle is more than 50%, left side is 100%, right side is 100%-duty cycle
+    if(dutyCycle<127){
+        leftduty=dutyCycle<<1; //multiply by 2
+        rightduty=255;
+    }else{
+        leftduty=255;
+        rightduty=(255-dutyCycle)<<1; //multiply by 2
+    }
+    int comp_left = toCompareVal(leftduty);
+    int comp_right = toCompareVal(rightduty);    
+    LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_A, comp_left);
+    LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_B, comp_right);
+    LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_C, comp_left);
+    LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_E, comp_right);
 }
 
 /*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
