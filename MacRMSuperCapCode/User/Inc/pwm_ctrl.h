@@ -25,8 +25,8 @@
 
 #define CAP_MAX_CURRENT 13.8f
 
-#define POWER_LIMIT_MINIMUM 15.0f
-#define POWER_LIMIT_MAXIMUM 350.0f
+#define POWER_LIMIT_MINIMUM 15
+#define POWER_LIMIT_MAXIMUM 350
 
 #define ONTIME_FILTERSTABLE_DELAY 5
 /*************************************/

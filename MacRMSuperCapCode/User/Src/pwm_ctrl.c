@@ -121,7 +121,7 @@ static void fsm(void){
     }
 }
 
-void PWM_UpdateLimits(uint8_t limit){
+void PWM_UpdateLimits(uint16_t limit){
     if(limit<POWER_LIMIT_MINIMUM){
         limit=POWER_LIMIT_MINIMUM;
     }else if(limit>POWER_LIMIT_MAXIMUM){
