@@ -75,8 +75,8 @@ void PWM_SetDutyCycle(uint8_t dutyCycle){
         leftduty=255;
         rightduty=(255-dutyCycle)<<1; //multiply by 2
     }
-    int comp_left = toCompareVal(leftduty);
-    int comp_right = toCompareVal(rightduty);    
+    int comp_left = checkCompVal(toCompareVal(leftduty));
+    int comp_right = checkCompVal(toCompareVal(rightduty));    
     LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_A, comp_left);
     LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_B, comp_right);
     LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_C, comp_left);
