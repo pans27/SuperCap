@@ -1,15 +1,11 @@
 #include "pwm_ctrl.h"
 
-pwm_data_t pwm_data = {.cap_state = CAP_OFF, .power_limit = 50};
-
+pwm_data_t pwm_data = {.cap_state = CAP_OFF, .power_limit = 50.0f};
+pwm_adc_t pwm_adc;
 uint32_t ready_time = 0;
 uint32_t powerup_time = 0;
 uint8_t master_counter = 0;
 // Function to initialize PWM
-/*ADC data range is 0 to 4095
-    actual voltage = (ADC data * 3.3)/4095*11
-    actual current = (((ADC data * 3.3)/4095)-1.65)*20
-*/
 
 void PWM_Init(void){
     HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, SET); // turn on red LED init state
@@ -27,11 +23,11 @@ void PWM_Init(void){
     LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TC1); //INL2
     LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TE1); //INR2
 
-    HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&pwm_data.pwm_adc.v_cap, 1); // start ADCs
-    HAL_ADC_Start_DMA(&hadc2, (uint32_t*)&pwm_data.pwm_adc.i_cap, 1);
-    HAL_ADC_Start_DMA(&hadc3, (uint32_t*)&pwm_data.pwm_adc.i_chassis, 1);
-    HAL_ADC_Start_DMA(&hadc4, (uint32_t*)&pwm_data.pwm_adc.v_bat, 2);
-    HAL_ADC_Start_DMA(&hadc5, (uint32_t*)&pwm_data.pwm_adc.i_bat, 1);
+    HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&pwm_adc.v_cap, 1); // start ADCs
+    HAL_ADC_Start_DMA(&hadc2, (uint32_t*)&pwm_adc.i_cap, 1);
+    HAL_ADC_Start_DMA(&hadc3, (uint32_t*)&pwm_adc.i_chassis, 1);
+    HAL_ADC_Start_DMA(&hadc4, (uint32_t*)&pwm_adc.v_bat, 2);
+    HAL_ADC_Start_DMA(&hadc5, (uint32_t*)&pwm_adc.i_bat, 1);
 
     HAL_UART_Transmit_DMA(&huart4, (uint8_t*)&pwm_data, sizeof(pwm_data)); // send UART message
 
@@ -135,11 +131,26 @@ void PWM_UpdateLimits(uint16_t limit){
     pwm_data.power_limit = limit;
 }
 
+/*ADC data range is 0 to 4095
+    actual voltage = (ADC data * 3.3)/4095*11
+    actual current = (((ADC data * 3.3)/4095)-1.65)*20
+*/
+/*!!!!!!!!!!!!!!! IIR FILTER USED!!!!!!!!!!!!!!!!!*/
+__STATIC_INLINE void adc_to_voltage_current(void){
+    pwm_data.v_cap = (pwm_adc.v_cap*V_REF)/4095.0f*11.0f*IIR_V + pwm_data.v_cap*(1-IIR_V);
+    pwm_data.i_cap = (((pwm_adc.i_cap*V_REF)/4095.0f)-1.65f)*20.0f*I_CAP_COE*IIR_C + pwm_data.i_cap*(1-IIR_C);
+    pwm_data.i_chassis = (((pwm_adc.i_chassis*V_REF)/4095.0f)-1.65f)*20.0f*I_CHASSIS_COE*IIR_C + pwm_data.i_chassis*(1-IIR_C);
+    pwm_data.v_bat = (pwm_adc.v_bat*V_REF)/4095.0f*11.0f*IIR_V + pwm_data.v_bat*(1-IIR_V);
+    pwm_data.v_chassis = (pwm_adc.v_chassis*V_REF)/4095.0f*11.0f*IIR_V + pwm_data.v_chassis*(1-IIR_V);
+    pwm_data.i_bat = (((pwm_adc.i_bat*V_REF)/4095.0f)-1.65f)*20.0f*I_BAT_COE*IIR_C + pwm_data.i_bat*(1-IIR_C);
+}
+
 /*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
 void PWM_Control(void){
     /*!!!!!!!!!! TO BE SET!!!!!!!!!!!!!!!*/
     if(master_counter==5){ // limit control changes to every 5th cycle
         master_counter = 0;
+        adc_to_voltage_current();
         fsm();
     } else{
         master_counter++;

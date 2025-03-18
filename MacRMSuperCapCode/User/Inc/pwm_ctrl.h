@@ -25,11 +25,18 @@
 
 #define CAP_MAX_CURRENT 13.8f
 
-#define POWER_LIMIT_MINIMUM 15
-#define POWER_LIMIT_MAXIMUM 350
+#define POWER_LIMIT_MINIMUM 15.0f
+#define POWER_LIMIT_MAXIMUM 350.0f
 
 #define ONTIME_FILTERSTABLE_DELAY 5
 /*************************************/
+
+#define IIR_V 0.1f
+#define IIR_C 0.2f
+#define I_CAP_COE 1.0f
+#define I_CHASSIS_COE 1.0f
+#define I_BAT_COE 1.0f
+#define V_REF 3.3f
 
 typedef struct pwm_adc_t{
     uint16_t v_cap;   //ADC1_IN2 (PA1)
@@ -42,9 +49,14 @@ typedef struct pwm_adc_t{
 
 typedef struct pwm_data_t
 {
-    pwm_adc_t pwm_adc;
+    float v_cap;
+    float i_cap;     
+    float i_chassis; 
+    float v_bat;
+    float v_chassis; 
+    float i_bat; 
     uint8_t cap_state;
-    uint8_t power_limit;
+    float power_limit;
 }pwm_data_t;
 
 
