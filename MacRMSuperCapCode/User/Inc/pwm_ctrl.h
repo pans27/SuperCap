@@ -50,10 +50,10 @@ typedef struct pwm_adc_t{
 typedef struct pwm_data_t
 {
     float v_cap;
-    float i_cap;     
+    float i_cap;
+    float v_chassis;     
     float i_chassis; 
     float v_bat;
-    float v_chassis; 
     float i_bat; 
     uint8_t cap_state;
     float power_limit;

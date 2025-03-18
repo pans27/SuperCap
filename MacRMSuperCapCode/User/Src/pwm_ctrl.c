@@ -5,35 +5,39 @@ pwm_adc_t pwm_adc;
 uint32_t ready_time = 0;
 uint32_t powerup_time = 0;
 uint8_t master_counter = 0;
-// Function to initialize PWM
 
-void PWM_Init(void){
+float max_allow_current;
+float target_cap_current;
+
+// Function to initialize PWM
+void PWM_Init(void)
+{
     HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, SET); // turn on red LED init state
 
     HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, RESET); // make sure fets off
 
-    HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED); //calibrate ADCs
+    HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED); // calibrate ADCs
     HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
     HAL_ADCEx_Calibration_Start(&hadc3, ADC_SINGLE_ENDED);
     HAL_ADCEx_Calibration_Start(&hadc4, ADC_SINGLE_ENDED);
     HAL_ADCEx_Calibration_Start(&hadc5, ADC_SINGLE_ENDED);
     // enable HRTIM outputs
-    LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TA2); //INL1
-    LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TB1); //INR1
-    LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TC1); //INL2
-    LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TE1); //INR2
+    LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TA2); // INL1
+    LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TB1); // INR1
+    LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TC1); // INL2
+    LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TE1); // INR2
 
-    HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&pwm_adc.v_cap, 1); // start ADCs
-    HAL_ADC_Start_DMA(&hadc2, (uint32_t*)&pwm_adc.i_cap, 1);
-    HAL_ADC_Start_DMA(&hadc3, (uint32_t*)&pwm_adc.i_chassis, 1);
-    HAL_ADC_Start_DMA(&hadc4, (uint32_t*)&pwm_adc.v_bat, 2);
-    HAL_ADC_Start_DMA(&hadc5, (uint32_t*)&pwm_adc.i_bat, 1);
+    HAL_ADC_Start_DMA(&hadc1, (uint32_t *)&pwm_adc.v_cap, 1); // start ADCs
+    HAL_ADC_Start_DMA(&hadc2, (uint32_t *)&pwm_adc.i_cap, 1);
+    HAL_ADC_Start_DMA(&hadc3, (uint32_t *)&pwm_adc.i_chassis, 1);
+    HAL_ADC_Start_DMA(&hadc4, (uint32_t *)&pwm_adc.v_bat, 2);
+    HAL_ADC_Start_DMA(&hadc5, (uint32_t *)&pwm_adc.i_bat, 1);
 
-    HAL_UART_Transmit_DMA(&huart4, (uint8_t*)&pwm_data, sizeof(pwm_data)); // send UART message
+    HAL_UART_Transmit_DMA(&huart4, (uint8_t *)&pwm_data, sizeof(pwm_data)); // send UART message
 
     /*!!!!!!!!!!!!!!! TO BE SET!!!!!!!!!!!!!!!!!*/
     PWM_SetDutyCycle(0); // set duty cycle to 0
-    PWM_SetPhase(0); // set phase to 0
+    PWM_SetPhase(0);     // set phase to 0
 
     HAL_Delay(10);
 
@@ -42,19 +46,26 @@ void PWM_Init(void){
     ready_time = HAL_GetTick();
 }
 
-__STATIC_INLINE int checkCompVal(int val){
-    if(val<PWM_COMPARE_MINVAL){
+__STATIC_INLINE int checkCompVal(int val)
+{
+    if (val < PWM_COMPARE_MINVAL)
+    {
         return PWM_COMPARE_MINVAL;
-    }else if(val>PWM_PERIOD-100){
-        return PWM_PERIOD-100;
-    }else{
+    }
+    else if (val > PWM_PERIOD - 100)
+    {
+        return PWM_PERIOD - 100;
+    }
+    else
+    {
         return val;
     }
 }
 
 /*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
-void PWM_SetPhase(uint8_t phase){
-    //currently has inl1 and inr1 in phase, inl2 and inr2 + phase
+void PWM_SetPhase(uint8_t phase)
+{
+    // currently has inl1 and inr1 in phase, inl2 and inr2 + phase
     int phaseA = PWM_COMPARE_MINVAL;
     int phaseB = PWM_COMPARE_MINVAL;
     int phaseC = checkCompVal(PWM_COMPARE_MINVAL + toCompareVal(phase));
@@ -65,19 +76,23 @@ void PWM_SetPhase(uint8_t phase){
     LL_HRTIM_TIM_SetCompare4(HRTIM1, LL_HRTIM_TIMER_MASTER, phaseE);
 }
 /*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
-void PWM_SetDutyCycle(uint8_t dutyCycle){
-    uint8_t leftduty,rightduty;
-    //if duty cycle is less than 50%, left side is duty cycle, right side is 100%
-    //if duty cycle is more than 50%, left side is 100%, right side is 100%-duty cycle
-    if(dutyCycle<127){
-        leftduty=dutyCycle<<1; //multiply by 2
-        rightduty=255;
-    }else{
-        leftduty=255;
-        rightduty=(255-dutyCycle)<<1; //multiply by 2
+void PWM_SetDutyCycle(uint8_t dutyCycle)
+{
+    uint8_t leftduty, rightduty;
+    // if duty cycle is less than 50%, left side is duty cycle, right side is 100%
+    // if duty cycle is more than 50%, left side is 100%, right side is 100%-duty cycle
+    if (dutyCycle < 127)
+    {
+        leftduty = dutyCycle << 1; // multiply by 2
+        rightduty = 255;
+    }
+    else
+    {
+        leftduty = 255;
+        rightduty = (255 - dutyCycle) << 1; // multiply by 2
     }
     int comp_left = checkCompVal(toCompareVal(leftduty));
-    int comp_right = checkCompVal(toCompareVal(rightduty));    
+    int comp_right = checkCompVal(toCompareVal(rightduty));
     LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_A, comp_left);
     LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_B, comp_right);
     LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_C, comp_left);
@@ -85,48 +100,59 @@ void PWM_SetDutyCycle(uint8_t dutyCycle){
 }
 
 /*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
-static void fsm(void){
-    switch(pwm_data.cap_state){
-        case CAP_OFF:
-            HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, SET);
-            HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, RESET);
-            HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, RESET);
+static void fsm(void)
+{
+    switch (pwm_data.cap_state)
+    {
+    case CAP_OFF:
+        HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, SET);
+        HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, RESET);
+        HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, RESET);
+        break;
+    case CAP_READY:
+        HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, SET);
+        HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, SET);
+        HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, RESET);
+        if (ready_time == 0)
+        {
+            ready_time = HAL_GetTick();
+        }
+        else if (HAL_GetTick() - ready_time < ONTIME_FILTERSTABLE_DELAY)
+        {
             break;
-        case CAP_READY:
-            HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, SET);
-            HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, SET);
-            HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, RESET);
-            if(ready_time==0){
-                ready_time=HAL_GetTick();
-            }else if(HAL_GetTick()-ready_time < ONTIME_FILTERSTABLE_DELAY){
-                break;
-            }else{
-                ready_time=0;
-                //pid_reset_to_voltage();
-                pwm_data.cap_state=CAP_ON;
-                powerup_time=HAL_GetTick();
-                HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, SET); // turn on fets
-            }
-            break;
-        case CAP_ON:
-            HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, RESET);
-            HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, SET);
-            HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, RESET);
-            //update_pid();
-            break;
-        case VBUS_OVP:
-        case VBUS_UVP:
-        case VBAT_OVP:
-        default:
-            pwm_data.cap_state=CAP_OFF;
+        }
+        else
+        {
+            ready_time = 0;
+            // pid_reset_to_voltage();
+            pwm_data.cap_state = CAP_ON;
+            powerup_time = HAL_GetTick();
+            HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, SET); // turn on fets
+        }
+        break;
+    case CAP_ON:
+        HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, RESET);
+        HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, SET);
+        HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, RESET);
+        // update_pid();
+        break;
+    case VBUS_OVP:
+    case VBUS_UVP:
+    case VBAT_OVP:
+    default:
+        pwm_data.cap_state = CAP_OFF;
     }
 }
 
-void PWM_UpdateLimits(uint16_t limit){
-    if(limit<POWER_LIMIT_MINIMUM){
-        limit=POWER_LIMIT_MINIMUM;
-    }else if(limit>POWER_LIMIT_MAXIMUM){
-        limit=POWER_LIMIT_MAXIMUM;
+void PWM_UpdateLimits(uint16_t limit)
+{
+    if (limit < POWER_LIMIT_MINIMUM)
+    {
+        limit = POWER_LIMIT_MINIMUM;
+    }
+    else if (limit > POWER_LIMIT_MAXIMUM)
+    {
+        limit = POWER_LIMIT_MAXIMUM;
     }
     pwm_data.power_limit = limit;
 }
@@ -136,23 +162,46 @@ void PWM_UpdateLimits(uint16_t limit){
     actual current = (((ADC data * 3.3)/4095)-1.65)*20
 */
 /*!!!!!!!!!!!!!!! IIR FILTER USED!!!!!!!!!!!!!!!!!*/
-__STATIC_INLINE void adc_to_voltage_current(void){
-    pwm_data.v_cap = (pwm_adc.v_cap*V_REF)/4095.0f*11.0f*IIR_V + pwm_data.v_cap*(1-IIR_V);
-    pwm_data.i_cap = (((pwm_adc.i_cap*V_REF)/4095.0f)-1.65f)*20.0f*I_CAP_COE*IIR_C + pwm_data.i_cap*(1-IIR_C);
-    pwm_data.i_chassis = (((pwm_adc.i_chassis*V_REF)/4095.0f)-1.65f)*20.0f*I_CHASSIS_COE*IIR_C + pwm_data.i_chassis*(1-IIR_C);
-    pwm_data.v_bat = (pwm_adc.v_bat*V_REF)/4095.0f*11.0f*IIR_V + pwm_data.v_bat*(1-IIR_V);
-    pwm_data.v_chassis = (pwm_adc.v_chassis*V_REF)/4095.0f*11.0f*IIR_V + pwm_data.v_chassis*(1-IIR_V);
-    pwm_data.i_bat = (((pwm_adc.i_bat*V_REF)/4095.0f)-1.65f)*20.0f*I_BAT_COE*IIR_C + pwm_data.i_bat*(1-IIR_C);
+__STATIC_INLINE void adc_to_voltage_current(void)
+{
+    pwm_data.v_cap = (pwm_adc.v_cap * V_REF) / 4095.0f * 11.0f * IIR_V + pwm_data.v_cap * (1 - IIR_V);
+    pwm_data.i_cap = (((pwm_adc.i_cap * V_REF) / 4095.0f) - 1.65f) * 20.0f * I_CAP_COE * IIR_C + pwm_data.i_cap * (1 - IIR_C);
+    pwm_data.i_chassis = (((pwm_adc.i_chassis * V_REF) / 4095.0f) - 1.65f) * 20.0f * I_CHASSIS_COE * IIR_C + pwm_data.i_chassis * (1 - IIR_C);
+    pwm_data.v_bat = (pwm_adc.v_bat * V_REF) / 4095.0f * 11.0f * IIR_V + pwm_data.v_bat * (1 - IIR_V);
+    pwm_data.v_chassis = (pwm_adc.v_chassis * V_REF) / 4095.0f * 11.0f * IIR_V + pwm_data.v_chassis * (1 - IIR_V);
+    pwm_data.i_bat = (((pwm_adc.i_bat * V_REF) / 4095.0f) - 1.65f) * 20.0f * I_BAT_COE * IIR_C + pwm_data.i_bat * (1 - IIR_C);
 }
 
 /*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
-void PWM_Control(void){
+void PWM_Control(void)
+{
     /*!!!!!!!!!! TO BE SET!!!!!!!!!!!!!!!*/
-    if(master_counter==5){ // limit control changes to every 5th cycle
+    if (master_counter == 5)
+    { // limit control changes to every 5th cycle
         master_counter = 0;
         adc_to_voltage_current();
+        max_allow_current = pwm_data.power_limit / pwm_data.v_bat;
+        target_cap_current = max_allow_current - pwm_data.i_chassis;
+        // calculate target current
+
+        // FIXME: need math calculation
+        float lim_judge = CAP_MAX_CURRENT * (pwm_data.v_cap / pwm_data.v_bat);
+        float lim_capfull = (BAT_FULL_VOL - pwm_data.v_cap) * 7.0f;
+        float lim_caplow = (pwm_data.v_cap - BAT_UVP_STARTUP_THRE) * 5.0f;
+
+        float charge_maxi = lim_judge < lim_capfull ? lim_judge : lim_capfull;
+        float discharge_maxi = lim_judge < lim_caplow ? lim_judge : lim_caplow;
+
+        discharge_maxi = discharge_maxi < -0.25f ? -0.25f : discharge_maxi;
+
+        target_cap_current = (target_cap_current > charge_maxi) ? charge_maxi : 
+                             (target_cap_current < -discharge_maxi) ? -discharge_maxi : target_cap_current;
+
+        HAL_IWDG_Refresh(&hiwdg);
         fsm();
-    } else{
+    }
+    else
+    {
         master_counter++;
     }
 }
