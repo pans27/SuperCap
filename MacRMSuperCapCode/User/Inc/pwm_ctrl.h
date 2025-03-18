@@ -38,6 +38,8 @@
 #define I_BAT_COE 1.0f
 #define V_REF 3.3f
 
+#define DT (5.0f/400000.0f) // 5 x PWM period
+
 typedef struct pwm_adc_t{
     uint16_t v_cap;   //ADC1_IN2 (PA1)
     uint16_t i_cap;     //ADC2_IN1 (PA0)
@@ -59,6 +61,14 @@ typedef struct pwm_data_t
     float power_limit;
 }pwm_data_t;
 
+typedef struct pid_t
+{
+    const float p;
+    const float integ;
+    const float d;
+    const float i_max;
+    float err_i;
+}PID_t;
 
 enum cap_states{
     CAP_OFF,

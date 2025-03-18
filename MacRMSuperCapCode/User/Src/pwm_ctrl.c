@@ -9,6 +9,14 @@ uint8_t master_counter = 0;
 float max_allow_current;
 float target_cap_current;
 
+PID_t pid={
+    .p=0.0f,
+    .integ=30000.0f,
+    .d=0.0f,
+    .i_max=0.0035f,
+    .err_i=0.0f,
+};
+
 // Function to initialize PWM
 void PWM_Init(void)
 {
@@ -99,6 +107,31 @@ void PWM_SetDutyCycle(uint8_t dutyCycle)
     LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_E, comp_right);
 }
 
+__STATIC_INLINE void pid_reset(){
+    //Reset the integral term
+    pid.err_i= 0;
+}
+
+__STATIC_INLINE void update_pid(){
+
+    float err = target_cap_current-pwm_data.i_cap;
+    pid.err_i += err*DT;
+
+    if(pid.err_i > pid.i_max) pid.err_i = pid.i_max;
+    if(pid.err_i < -pid.i_max) pid.err_i = -pid.i_max;
+    
+    PWM_SetDutyCycle(pid.err_i*pid.integ);
+}
+
+__STATIC_INLINE void pid_reset_to_voltage(){
+    if(pwm_data.v_bat <= pwm_data.v_cap){
+        pid.err_i=(50.0f/pid.integ);  //prevent an agressive capacitor discharge
+    }else{
+        float io_ratio=pwm_data.v_cap/(pwm_data.v_bat+0.01f); //NEVER divide by zero
+        pid.err_i=100.0f*(io_ratio/pid.integ); //if v_bat >> v_cap, io_ratio will be small
+    }
+}
+
 /*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
 static void fsm(void)
 {
@@ -124,7 +157,7 @@ static void fsm(void)
         else
         {
             ready_time = 0;
-            // pid_reset_to_voltage();
+            pid_reset_to_voltage();
             pwm_data.cap_state = CAP_ON;
             powerup_time = HAL_GetTick();
             HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, SET); // turn on fets
@@ -134,7 +167,7 @@ static void fsm(void)
         HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, RESET);
         HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, SET);
         HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, RESET);
-        // update_pid();
+        update_pid();
         break;
     case VBUS_OVP:
     case VBUS_UVP:
