@@ -6,6 +6,11 @@ uint32_t ready_time = 0;
 uint32_t powerup_time = 0;
 uint8_t master_counter = 0;
 // Function to initialize PWM
+/*ADC data range is 0 to 4095
+    actual voltage = (ADC data * 3.3)/4095*11
+    actual current = (((ADC data * 3.3)/4095)-1.65)*20
+*/
+
 void PWM_Init(void){
     HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, SET); // turn on red LED init state
 
