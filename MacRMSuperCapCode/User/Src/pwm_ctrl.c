@@ -213,11 +213,11 @@ void PWM_Control(void)
     { // limit control changes to every other cycle
         master_counter = 0;
 
-        target_cap_current = (pwm_data.power_limit / pwm_data.v_bat) - pwm_data.i_chassis;
+        target_cap_current = (pwm_data.i_bat < 0.01f || pwm_data.v_bat < 0.01f) ? pwm_data.i_chassis : ((pwm_data.power_limit / pwm_data.v_bat) - pwm_data.i_chassis);
         // calculate target current
 
         // FIXME: need math calculation
-        float lim_judge = CAP_MAX_CURRENT * (pwm_data.v_cap / pwm_data.v_bat);
+        float lim_judge = (pwm_data.i_bat < 0.01f || pwm_data.v_bat < 0.01f) ? CAP_MAX_CURRENT : (CAP_MAX_CURRENT * (pwm_data.v_cap / pwm_data.v_bat));
         float lim_capfull = (BAT_FULL_VOL - pwm_data.v_cap) * 7.0f;
         float lim_caplow = (pwm_data.v_cap - BAT_UVP_STARTUP_THRE) * 5.0f;
 
