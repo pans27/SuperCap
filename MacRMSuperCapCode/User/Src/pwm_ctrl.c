@@ -6,7 +6,6 @@ uint32_t ready_time = 0;
 uint32_t powerup_time = 0;
 uint8_t master_counter = 0;
 
-float max_allow_current;
 float target_cap_current;
 
 PID_t pid={
@@ -208,13 +207,13 @@ __STATIC_INLINE void adc_to_voltage_current(void)
 /*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
 void PWM_Control(void)
 {
+    adc_to_voltage_current();
     /*!!!!!!!!!! TO BE SET!!!!!!!!!!!!!!!*/
-    if (master_counter == 5)
-    { // limit control changes to every 5th cycle
+    if (master_counter == 1) 
+    { // limit control changes to every other cycle
         master_counter = 0;
-        adc_to_voltage_current();
-        max_allow_current = pwm_data.power_limit / pwm_data.v_bat;
-        target_cap_current = max_allow_current - pwm_data.i_chassis;
+
+        target_cap_current = (pwm_data.power_limit / pwm_data.v_bat) - pwm_data.i_chassis;
         // calculate target current
 
         // FIXME: need math calculation
