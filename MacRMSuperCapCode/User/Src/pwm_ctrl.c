@@ -5,6 +5,7 @@ pwm_adc_t pwm_adc;
 uint32_t ready_time = 0;
 uint32_t powerup_time = 0;
 uint8_t master_counter = 0;
+char pwm_msg[100] = "hello world\n";
 
 float target_cap_current;
 
@@ -40,7 +41,8 @@ void PWM_Init(void)
     HAL_ADC_Start_DMA(&hadc4, (uint32_t *)&pwm_adc.v_bat, 2);
     HAL_ADC_Start_DMA(&hadc5, (uint32_t *)&pwm_adc.i_bat, 1);
 
-    HAL_UART_Transmit_DMA(&huart4, (uint8_t *)&pwm_data, sizeof(pwm_data)); // send UART message
+    HAL_UART_Transmit_DMA(&huart4, (char *)&pwm_msg, sizeof(pwm_msg)); // send UART message
+    //HAL_UART_Transmit_DMA(&huart4, (uint8_t *)&pwm_data, sizeof(pwm_data)); // send UART message
 
     /*!!!!!!!!!!!!!!! TO BE SET!!!!!!!!!!!!!!!!!*/
     PWM_SetDutyCycle(0); // set duty cycle to 0
@@ -100,10 +102,10 @@ void PWM_SetDutyCycle(uint8_t dutyCycle)
     }
     int comp_left = checkCompVal(toCompareVal(leftduty));
     int comp_right = checkCompVal(toCompareVal(rightduty));
-    LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_A, comp_left);
-    LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_B, comp_right);
-    LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_C, comp_left);
-    LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_E, comp_right);
+    LL_HRTIM_TIM_SetCompare1(HRTIM1, LL_HRTIM_TIMER_A, comp_left);
+    LL_HRTIM_TIM_SetCompare1(HRTIM1, LL_HRTIM_TIMER_B, comp_right);
+    LL_HRTIM_TIM_SetCompare1(HRTIM1, LL_HRTIM_TIMER_C, comp_left);
+    LL_HRTIM_TIM_SetCompare1(HRTIM1, LL_HRTIM_TIMER_E, comp_right);
 }
 
 __STATIC_INLINE void pid_reset(){
