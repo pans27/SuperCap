@@ -1,11 +1,12 @@
 #include "pwm_ctrl.h"
-
+#include "string.h"
+volatile uint8_t uart_tx_done = 1;
 pwm_data_t pwm_data = {.cap_state = CAP_OFF, .power_limit = 50.0f};
 pwm_adc_t pwm_adc;
 uint32_t ready_time = 0;
 uint32_t powerup_time = 0;
 uint8_t master_counter = 0;
-char pwm_msg[100] = "hello world\n";
+uint8_t pwm_msg[] = "hello world\n";
 
 float target_cap_current;
 
@@ -35,14 +36,18 @@ void PWM_Init(void)
     LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TC1); // INL2
     LL_HRTIM_EnableOutput(HRTIM1, LL_HRTIM_OUTPUT_TE1); // INR2
 
-    HAL_ADC_Start_DMA(&hadc1, (uint32_t *)&pwm_adc.v_cap, 1); // start ADCs
-    HAL_ADC_Start_DMA(&hadc2, (uint32_t *)&pwm_adc.i_cap, 1);
-    HAL_ADC_Start_DMA(&hadc3, (uint32_t *)&pwm_adc.i_chassis, 1);
-    HAL_ADC_Start_DMA(&hadc4, (uint32_t *)&pwm_adc.v_bat, 2);
-    HAL_ADC_Start_DMA(&hadc5, (uint32_t *)&pwm_adc.i_bat, 1);
+    HAL_ADC_Start_DMA(&hadc1, (uint32_t *)&(pwm_adc.v_cap), 1); // start ADCs
+    HAL_ADC_Start_DMA(&hadc2, (uint32_t *)&(pwm_adc.i_cap), 1);
+    HAL_ADC_Start_DMA(&hadc3, (uint32_t *)&(pwm_adc.i_chassis), 1);
+    HAL_ADC_Start_DMA(&hadc4, (uint32_t *)&(pwm_adc.v_bat), 2);
+    HAL_ADC_Start_DMA(&hadc5, (uint32_t *)&(pwm_adc.i_bat), 1);
 
-    HAL_UART_Transmit_DMA(&huart4, (char *)&pwm_msg, sizeof(pwm_msg)); // send UART message
+    
+    //HAL_UART_Transmit_DMA(&huart4, pwm_msg, sizeof(pwm_msg)); // send UART message
+    toUart("hello world\r\n");
     //HAL_UART_Transmit_DMA(&huart4, (uint8_t *)&pwm_data, sizeof(pwm_data)); // send UART message
+    //HAL_UART_Transmit_DMA(&huart4, pwm_msg, sizeof(pwm_msg)); // send UART message
+    //toUart("hello world\n");
 
     /*!!!!!!!!!!!!!!! TO BE SET!!!!!!!!!!!!!!!!!*/
     PWM_SetDutyCycle(0); // set duty cycle to 0
@@ -68,6 +73,22 @@ __STATIC_INLINE int checkCompVal(int val)
     else
     {
         return val;
+    }
+}
+
+void toUart( char *ptr)
+{
+    while (!uart_tx_done); // wait for previous TX to complete
+    uart_tx_done = 0;
+
+    HAL_UART_Transmit_DMA(&huart4, (uint8_t *)ptr, strlen(ptr));
+    //return len;
+}
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+    if (huart->Instance == UART4)  // match your UART
+    {
+        uart_tx_done = 1;
     }
 }
 
@@ -161,7 +182,7 @@ static void fsm(void)
             pid_reset_to_voltage();
             pwm_data.cap_state = CAP_ON;
             powerup_time = HAL_GetTick();
-            HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, SET); // turn on fets
+            //HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, SET); // turn on fets
         }
         break;
     case CAP_ON:
@@ -204,6 +225,28 @@ __STATIC_INLINE void adc_to_voltage_current(void)
     pwm_data.v_bat = (pwm_adc.v_bat * V_REF) / 4095.0f * 11.0f * IIR_V + pwm_data.v_bat * (1 - IIR_V);
     pwm_data.v_chassis = (pwm_adc.v_chassis * V_REF) / 4095.0f * 11.0f * IIR_V + pwm_data.v_chassis * (1 - IIR_V);
     pwm_data.i_bat = (((pwm_adc.i_bat * V_REF) / 4095.0f) - 1.65f) * 20.0f * I_BAT_COE * IIR_C + pwm_data.i_bat * (1 - IIR_C);
+}
+
+void send_uart(void)
+{
+    char line1[100], line2[100], line3[100], line4[100], line5[100], line6[100], line7[100], line8[100];
+    sprintf(line1, "v_cap: %2.3f\r\n", pwm_data.v_cap);
+    toUart(line1);
+    sprintf(line2, "i_cap: %2.3f\r\n", pwm_data.i_cap);
+    toUart(line2);
+    sprintf(line3, "v_chassis: %2.3f\r\n", pwm_data.v_chassis);
+    toUart(line3);
+    sprintf(line4, "i_chassis: %2.3f\r\n", pwm_data.i_chassis);
+    toUart(line4);
+    //sprintf(line5, "v_bat: %2.3f\r\n", pwm_data.v_bat);
+    sprintf(line5, "v_bat: %d\r\n", pwm_adc.v_bat);
+    toUart(line5);
+    sprintf(line6, "i_bat: %2.3f\r\n", pwm_data.i_bat);
+    toUart(line6);
+    sprintf(line7, "power_limit: %2.3f\r\n", pwm_data.power_limit);
+    toUart(line7);
+    sprintf(line8, "cap_state: %d\r\n", pwm_data.cap_state);
+    toUart(line8);
 }
 
 /*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/

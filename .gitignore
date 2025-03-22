@@ -1,4 +1,7 @@
-.metadata/
-.vscode/
-.settings/
-build/
+*.metadata/
+*.vscode/
+*.settings/
+*build/
+*.cproject
+*.project
+*.launch

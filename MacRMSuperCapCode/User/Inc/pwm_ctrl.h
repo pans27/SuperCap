@@ -7,6 +7,7 @@
 #include "hrtim.h"
 #include "usart.h"
 #include <stdint.h>
+#include "stdio.h"
 
 // Define PWM frequency and resolution
 #define PWM_PERIOD 13600 // 400 kHz
@@ -57,8 +58,8 @@ typedef struct pwm_data_t
     float i_chassis; 
     float v_bat;
     float i_bat; 
-    uint8_t cap_state;
     float power_limit;
+    uint8_t cap_state;
 }pwm_data_t;
 
 typedef struct pid_t
@@ -86,5 +87,7 @@ void PWM_SetPhase(uint8_t phase);
 void PWM_SetDutyCycle(uint8_t dutyCycle);
 void PWM_Control(void);
 void PWM_UpdateLimits(uint16_t limit);
+void toUart( char *ptr);
+void send_uart(void);
 
 #endif // PWM_CTRL_H

@@ -31,6 +31,7 @@
 /* USER CODE BEGIN Includes */
 #include "pwm_ctrl.h"
 #include "cap_can.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -117,9 +118,10 @@ int main(void)
   while (1)
   {
     //can transmit
-    HAL_Delay(10);
+    HAL_Delay(10000);
+    send_uart();
     /* USER CODE END WHILE */
-    
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
