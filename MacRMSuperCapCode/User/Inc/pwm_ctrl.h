@@ -34,10 +34,10 @@
 /*************************************/
 
 #define IIR_V 0.1f
-#define IIR_C 0.1f
-#define I_CAP_COE 0.7f
-#define I_CHASSIS_COE 0.7f
-#define I_BAT_COE 0.7f
+#define IIR_C 0.2f
+#define I_CAP_COE 0.75f
+#define I_CHASSIS_COE 0.75f
+#define I_BAT_COE 0.75f
 #define V_REF 3.21f
 
 #define DT (2.0f/400000.0f) // 5 x PWM period
