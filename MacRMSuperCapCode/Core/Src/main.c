@@ -119,7 +119,7 @@ int main(void)
   {
     //can transmit
     HAL_Delay(10000);
-    send_uart();
+    //send_uart();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

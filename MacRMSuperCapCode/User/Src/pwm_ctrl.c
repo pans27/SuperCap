@@ -1,5 +1,5 @@
 #include "pwm_ctrl.h"
-#include "string.h"
+
 volatile uint8_t uart_tx_done = 1;
 pwm_data_t pwm_data = {.cap_state = CAP_OFF, .power_limit = 50.0f};
 pwm_adc_t pwm_adc;
@@ -220,11 +220,11 @@ void PWM_UpdateLimits(uint16_t limit)
 __STATIC_INLINE void adc_to_voltage_current(void)
 {
     pwm_data.v_cap = (pwm_adc.v_cap * V_REF) / 4095.0f * 11.0f * IIR_V + pwm_data.v_cap * (1 - IIR_V);
-    pwm_data.i_cap = (((pwm_adc.i_cap * V_REF) / 4095.0f) - 1.65f) * 20.0f * I_CAP_COE * IIR_C + pwm_data.i_cap * (1 - IIR_C);
-    pwm_data.i_chassis = (((pwm_adc.i_chassis * V_REF) / 4095.0f) - 1.65f) * 20.0f * I_CHASSIS_COE * IIR_C + pwm_data.i_chassis * (1 - IIR_C);
+    pwm_data.i_cap = (((pwm_adc.i_cap * V_REF) / 4095.0f) - V_REF/2.0f) * 20.0f * I_CAP_COE * IIR_C + pwm_data.i_cap * (1 - IIR_C);
+    pwm_data.i_chassis = (((pwm_adc.i_chassis * V_REF) / 4095.0f) - V_REF/2.0f) * 20.0f * I_CHASSIS_COE * IIR_C + pwm_data.i_chassis * (1 - IIR_C);
     pwm_data.v_bat = (pwm_adc.v_bat * V_REF) / 4095.0f * 11.0f * IIR_V + pwm_data.v_bat * (1 - IIR_V);
     pwm_data.v_chassis = (pwm_adc.v_chassis * V_REF) / 4095.0f * 11.0f * IIR_V + pwm_data.v_chassis * (1 - IIR_V);
-    pwm_data.i_bat = (((pwm_adc.i_bat * V_REF) / 4095.0f) - 1.65f) * 20.0f * I_BAT_COE * IIR_C + pwm_data.i_bat * (1 - IIR_C);
+    pwm_data.i_bat = (((pwm_adc.i_bat * V_REF) / 4095.0f) - V_REF/2.0f) * 20.0f * I_BAT_COE * IIR_C + pwm_data.i_bat * (1 - IIR_C);
 }
 
 void send_uart(void)
@@ -238,8 +238,8 @@ void send_uart(void)
     toUart(line3);
     sprintf(line4, "i_chassis: %2.3f\r\n", pwm_data.i_chassis);
     toUart(line4);
-    //sprintf(line5, "v_bat: %2.3f\r\n", pwm_data.v_bat);
-    sprintf(line5, "v_bat: %d\r\n", pwm_adc.v_bat);
+    sprintf(line5, "v_bat: %2.3f\r\n", pwm_data.v_bat);
+    //sprintf(line5, "v_bat: %d\r\n", pwm_adc.v_bat);
     toUart(line5);
     sprintf(line6, "i_bat: %2.3f\r\n", pwm_data.i_bat);
     toUart(line6);
@@ -258,11 +258,11 @@ void PWM_Control(void)
     { // limit control changes to every other cycle
         master_counter = 0;
 
-        target_cap_current = (pwm_data.i_bat < 0.01f || pwm_data.v_bat < 0.01f) ? pwm_data.i_chassis : ((pwm_data.power_limit / pwm_data.v_bat) - pwm_data.i_chassis);
+        target_cap_current = (abs(pwm_data.i_bat) < 0.1f || abs(pwm_data.v_bat) < 0.1f) ? -pwm_data.i_chassis : ((pwm_data.power_limit / pwm_data.v_bat) - pwm_data.i_chassis);
         // calculate target current
 
         // FIXME: need math calculation
-        float lim_judge = (pwm_data.i_bat < 0.01f || pwm_data.v_bat < 0.01f) ? CAP_MAX_CURRENT : (CAP_MAX_CURRENT * (pwm_data.v_cap / pwm_data.v_bat));
+        float lim_judge = (abs(pwm_data.i_bat) < 0.1f || abs(pwm_data.v_bat)) ? CAP_MAX_CURRENT : (CAP_MAX_CURRENT * (pwm_data.v_cap / pwm_data.v_bat));
         float lim_capfull = (BAT_FULL_VOL - pwm_data.v_cap) * 7.0f;
         float lim_caplow = (pwm_data.v_cap - BAT_UVP_STARTUP_THRE) * 5.0f;
 

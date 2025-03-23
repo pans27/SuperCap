@@ -8,7 +8,8 @@
 #include "usart.h"
 #include <stdint.h>
 #include "stdio.h"
-
+#include "string.h"
+#include "stdlib.h"
 // Define PWM frequency and resolution
 #define PWM_PERIOD 13600 // 400 kHz
 #define PWM_COMPARE_MINVAL (700)
@@ -33,11 +34,11 @@
 /*************************************/
 
 #define IIR_V 0.1f
-#define IIR_C 0.2f
-#define I_CAP_COE 1.0f
-#define I_CHASSIS_COE 1.0f
-#define I_BAT_COE 1.0f
-#define V_REF 3.3f
+#define IIR_C 0.1f
+#define I_CAP_COE 0.7f
+#define I_CHASSIS_COE 0.7f
+#define I_BAT_COE 0.7f
+#define V_REF 3.21f
 
 #define DT (2.0f/400000.0f) // 5 x PWM period
 
