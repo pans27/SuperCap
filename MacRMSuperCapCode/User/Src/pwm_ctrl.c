@@ -23,7 +23,7 @@ PID_t pid={
 // Function to initialize PWM
 void PWM_Init(void)
 {
-    HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, SET); // turn on red LED init state
+    HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, LED_ON); // turn on red LED init state
 
     HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, RESET); // make sure fets off
 
@@ -186,14 +186,14 @@ static void fsm(void)
     switch (pwm_data.cap_state)
     {
     case CAP_OFF:
-        HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, SET);
-        HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, RESET);
-        HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, RESET);
+        HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, LED_ON);
+        HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, LED_OFF);
+        HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, LED_OFF);
         break;
     case CAP_READY:
-        HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, SET);
-        HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, SET);
-        HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, RESET);
+        HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, LED_ON);
+        HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, LED_ON);
+        HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, LED_OFF);
         if (ready_time == 0)
         {
             ready_time = HAL_GetTick();
@@ -212,19 +212,21 @@ static void fsm(void)
         }
         break;
     case CAP_ON:
-        HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, RESET);
-        HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, SET);
-        HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, RESET);
+        HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, LED_OFF);
+        HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, LED_ON);
+        HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, LED_OFF);
         update_pid();
         break;
     case VBUS_OVP:
     case VBUS_UVP:
         HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, RESET); // turn off fets
+        break;
     case VBAT_OVP:
-    if(HAL_GetTick() > protection_triggered + PROTECTION_RECOVERY_TIME){
-        pid_reset();
-        pwm_data.cap_state=CAP_READY;
-    }
+        if(HAL_GetTick() > protection_triggered + PROTECTION_RECOVERY_TIME){
+            pid_reset();
+            pwm_data.cap_state=CAP_READY;
+        }
+        break;
     default:
         pwm_data.cap_state = CAP_OFF;
     }
@@ -252,10 +254,10 @@ __STATIC_INLINE void adc_to_voltage_current(void)
 {
     pwm_data.v_cap = (pwm_adc.v_cap * V_REF) / 4095.0f * 11.0f * IIR_V + pwm_data.v_cap * (1 - IIR_V);
     pwm_data.i_cap = (((pwm_adc.i_cap * V_REF) / 4095.0f) - V_REF/2.0f) * 20.0f * I_CAP_COE * IIR_C + pwm_data.i_cap * (1 - IIR_C);
-    pwm_data.i_chassis = (((pwm_adc.i_chassis * V_REF) / 4095.0f) - V_REF/2.0f) * 20.0f * I_CHASSIS_COE * IIR_C + pwm_data.i_chassis * (1 - IIR_C);
+    pwm_data.i_chassis = ((((pwm_adc.i_chassis * V_REF) / 4095.0f) - V_REF/2.0f) * 20.0f * I_CHASSIS_COE + 0.1f)* IIR_C + pwm_data.i_chassis * (1 - IIR_C);
     pwm_data.v_bat = (pwm_adc.v_bat * V_REF) / 4095.0f * 11.0f * IIR_V + pwm_data.v_bat * (1 - IIR_V);
     pwm_data.v_chassis = (pwm_adc.v_chassis * V_REF) / 4095.0f * 11.0f * IIR_V + pwm_data.v_chassis * (1 - IIR_V);
-    pwm_data.i_bat = (((pwm_adc.i_bat * V_REF) / 4095.0f) - V_REF/2.0f) * 20.0f * I_BAT_COE * IIR_C + pwm_data.i_bat * (1 - IIR_C);
+    pwm_data.i_bat = ((((pwm_adc.i_bat * V_REF) / 4095.0f) - V_REF/2.0f) * 20.0f * I_BAT_COE + 0.1f)* IIR_C + pwm_data.i_bat * (1 - IIR_C);
 }
 
 void send_uart(void)
