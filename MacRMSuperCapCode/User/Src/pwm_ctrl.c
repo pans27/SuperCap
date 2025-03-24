@@ -10,7 +10,7 @@ uint8_t master_counter = 0;
 uint8_t pwm_msg[] = "hello world\n";
 uint8_t duty, leftduty, rightduty;
 
-float target_cap_current;
+float target_current;
 
 PID_t pid={
     .p=0.0f,
@@ -144,7 +144,7 @@ __STATIC_INLINE void pid_reset(){
 
 __STATIC_INLINE void update_pid(){
 
-    float err = target_cap_current-pwm_data.i_cap;
+    float err = target_current-pwm_data.i_bat;
     pid.err_i += err*DT;
 
     if(pid.err_i > pid.i_max) pid.err_i = pid.i_max;
@@ -289,7 +289,7 @@ void PWM_Control(void)
     { // limit control changes to every other cycle
         master_counter = 0;
         //abs(pwm_data.i_bat) < 0.1f || ( abs(pwm_data.v_bat) < 0.1f) ? -pwm_data.i_chassis :
-        target_cap_current =  ((pwm_data.power_limit / pwm_data.v_bat) - pwm_data.i_chassis);
+        target_current =  ((pwm_data.power_limit / pwm_data.v_bat) - pwm_data.i_chassis);
         // calculate target current
 
         // FIXME: need math calculation
@@ -303,9 +303,9 @@ void PWM_Control(void)
 
         discharge_maxi = discharge_maxi < -0.25f ? -0.25f : discharge_maxi;
 
-        target_cap_current = (target_cap_current > charge_maxi) ? charge_maxi : 
-                             (target_cap_current < -discharge_maxi) ? -discharge_maxi : target_cap_current;
-
+        target_current = (target_current > charge_maxi) ? charge_maxi : 
+                             (target_current < -discharge_maxi) ? -discharge_maxi : target_current;
+        target_current = target_current + pwm_data.i_chassis;
         HAL_IWDG_Refresh(&hiwdg);
         fsm();
     }
