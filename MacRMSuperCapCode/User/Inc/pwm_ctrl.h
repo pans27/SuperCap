@@ -17,7 +17,7 @@
 #define toCompareVal(p) (p*PWM_PERIOD)/255
 
 /************SAFETY SETTINGS**********/
-#define BUS_UVP_THRE 18.0f
+#define BUS_UVP_THRE 15.0f
 #define BUS_OVP_THRE 28.5f
 #define BAT_OVP_THRE 30.0f
 #define BAT_FULL_VOL 23.5f
@@ -34,11 +34,11 @@
 /*************************************/
 
 #define IIR_V 0.1f
-#define IIR_C 0.2f
-#define I_CAP_COE 0.75f
-#define I_CHASSIS_COE 0.75f
-#define I_BAT_COE 0.75f
-#define V_REF 3.21f
+#define IIR_C 0.1f
+#define I_CAP_COE 0.72f
+#define I_CHASSIS_COE 0.74f
+#define I_BAT_COE 0.74f
+#define V_REF 3.214f
 
 #define DT (2.0f/400000.0f) // 5 x PWM period
 
@@ -85,9 +85,9 @@ enum cap_states{
 // Function prototypes
 void PWM_Init(void);
 void PWM_SetPhase(uint8_t phase);
-void PWM_SetDutyCycle(uint8_t dutyCycle);
+void PWM_SetDutyCycle(float dutyCycle);
 void PWM_Control(void);
-void PWM_UpdateLimits(uint16_t limit);
+void PWM_UpdateLimits(float limit);
 void toUart( char *ptr);
 void send_uart(void);
 

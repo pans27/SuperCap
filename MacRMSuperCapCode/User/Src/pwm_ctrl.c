@@ -1,12 +1,14 @@
 #include "pwm_ctrl.h"
 
 volatile uint8_t uart_tx_done = 1;
-pwm_data_t pwm_data = {.cap_state = CAP_OFF, .power_limit = 50.0f};
+pwm_data_t pwm_data = {.cap_state = CAP_OFF, .power_limit = 15.0f};
 pwm_adc_t pwm_adc;
 uint32_t ready_time = 0;
 uint32_t powerup_time = 0;
+uint32_t protection_triggered=0;
 uint8_t master_counter = 0;
 uint8_t pwm_msg[] = "hello world\n";
+uint8_t duty, leftduty, rightduty;
 
 float target_cap_current;
 
@@ -51,7 +53,7 @@ void PWM_Init(void)
 
     /*!!!!!!!!!!!!!!! TO BE SET!!!!!!!!!!!!!!!!!*/
     PWM_SetDutyCycle(0); // set duty cycle to 0
-    PWM_SetPhase(0);     // set phase to 0
+    PWM_SetPhase(127);     // set phase to 0
 
     HAL_Delay(10);
 
@@ -106,20 +108,26 @@ void PWM_SetPhase(uint8_t phase)
     LL_HRTIM_TIM_SetCompare4(HRTIM1, LL_HRTIM_TIMER_MASTER, phaseE);
 }
 /*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
-void PWM_SetDutyCycle(uint8_t dutyCycle)
-{
-    uint8_t leftduty, rightduty;
+void PWM_SetDutyCycle(float dutyCycle)
+{   
+    if(dutyCycle<0.1f){
+        dutyCycle=0.1f;
+    }else if(dutyCycle>100.0f){
+        dutyCycle=100.0f;
+    }
+
+    duty = (uint8_t)(dutyCycle*255.0f/100.0f);
     // if duty cycle is less than 50%, left side is duty cycle, right side is 100%
     // if duty cycle is more than 50%, left side is 100%, right side is 100%-duty cycle
-    if (dutyCycle < 127)
+    if (duty < 127)
     {
-        leftduty = dutyCycle << 1; // multiply by 2
+        leftduty = duty << 1; // multiply by 2
         rightduty = 255;
     }
     else
     {
         leftduty = 255;
-        rightduty = (255 - dutyCycle) << 1; // multiply by 2
+        rightduty = (255 - duty) << 1; // multiply by 2
     }
     int comp_left = checkCompVal(toCompareVal(leftduty));
     int comp_right = checkCompVal(toCompareVal(rightduty));
@@ -157,6 +165,24 @@ __STATIC_INLINE void pid_reset_to_voltage(){
 /*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
 static void fsm(void)
 {
+    if(pwm_data.v_chassis > BUS_OVP_THRE){ //BUS over-voltage protection
+        pwm_data.cap_state=VBUS_OVP;
+        protection_triggered=HAL_GetTick();
+    }else if(pwm_data.v_chassis < BUS_UVP_THRE){ //BUS under-voltage halt
+        pwm_data.cap_state=VBUS_UVP;
+        protection_triggered=HAL_GetTick();
+    }else if(pwm_data.v_cap > BAT_OVP_THRE){ //BAT over-voltage protection
+        pwm_data.cap_state=VBAT_OVP;
+        //data.testval=data.v_cap;// debug display output
+        protection_triggered=HAL_GetTick();
+    }else if(pwm_data.cap_state==VBUS_UVP && pwm_data.v_chassis > BUS_UVP_THRE \
+        && protection_triggered < HAL_GetTick() - 50){ 
+        //recovery from BUS UVP
+        pid_reset();
+        protection_triggered=HAL_GetTick();
+        pwm_data.cap_state=CAP_READY;
+    }
+
     switch (pwm_data.cap_state)
     {
     case CAP_OFF:
@@ -182,7 +208,7 @@ static void fsm(void)
             pid_reset_to_voltage();
             pwm_data.cap_state = CAP_ON;
             powerup_time = HAL_GetTick();
-            //HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, SET); // turn on fets
+            HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, SET); // turn on fets
         }
         break;
     case CAP_ON:
@@ -193,13 +219,18 @@ static void fsm(void)
         break;
     case VBUS_OVP:
     case VBUS_UVP:
+        HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, RESET); // turn off fets
     case VBAT_OVP:
+    if(HAL_GetTick() > protection_triggered + PROTECTION_RECOVERY_TIME){
+        pid_reset();
+        pwm_data.cap_state=CAP_READY;
+    }
     default:
         pwm_data.cap_state = CAP_OFF;
     }
 }
 
-void PWM_UpdateLimits(uint16_t limit)
+void PWM_UpdateLimits(float limit)
 {
     if (limit < POWER_LIMIT_MINIMUM)
     {
@@ -257,12 +288,13 @@ void PWM_Control(void)
     if (master_counter == 1) 
     { // limit control changes to every other cycle
         master_counter = 0;
-
-        target_cap_current = (abs(pwm_data.i_bat) < 0.1f || abs(pwm_data.v_bat) < 0.1f) ? -pwm_data.i_chassis : ((pwm_data.power_limit / pwm_data.v_bat) - pwm_data.i_chassis);
+        //abs(pwm_data.i_bat) < 0.1f || ( abs(pwm_data.v_bat) < 0.1f) ? -pwm_data.i_chassis :
+        target_cap_current =  ((pwm_data.power_limit / pwm_data.v_bat) - pwm_data.i_chassis);
         // calculate target current
 
         // FIXME: need math calculation
-        float lim_judge = (abs(pwm_data.i_bat) < 0.1f || abs(pwm_data.v_bat)) ? CAP_MAX_CURRENT : (CAP_MAX_CURRENT * (pwm_data.v_cap / pwm_data.v_bat));
+        //abs(pwm_data.i_bat) < 0.1f || ??
+        float lim_judge = (abs(pwm_data.v_bat) < 0.1f ) ? CAP_MAX_CURRENT : (CAP_MAX_CURRENT * (pwm_data.v_cap / pwm_data.v_bat));
         float lim_capfull = (BAT_FULL_VOL - pwm_data.v_cap) * 7.0f;
         float lim_caplow = (pwm_data.v_cap - BAT_UVP_STARTUP_THRE) * 5.0f;
 
