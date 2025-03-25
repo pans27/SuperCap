@@ -2,6 +2,8 @@
 #define CAP_CAN_H
 
 #include <stdint.h>
+#include "fdcan.h"
+#include "pwm_ctrl.h"
 
 // CAN communication defines
 #define CAN_TX_ID    0x100   // CAN transmit ID
