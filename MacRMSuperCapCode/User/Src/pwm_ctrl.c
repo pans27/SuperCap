@@ -13,8 +13,8 @@ uint8_t duty, leftduty, rightduty;
 float target_current;
 
 PID_t pid={
-    .p=0.0f,
-    .integ=30000.0f,
+    .p=50.0f,
+    .integ=29900.0f,
     .d=0.0f,
     .i_max=0.0035f,
     .err_i=0.0f,
@@ -52,7 +52,7 @@ void PWM_Init(void)
     //toUart("hello world\n");
 
     /*!!!!!!!!!!!!!!! TO BE SET!!!!!!!!!!!!!!!!!*/
-    PWM_SetDutyCycle(0); // set duty cycle to 0
+    PWM_SetDutyCycle(0.0f); // set duty cycle to 0
     PWM_SetPhase(127);     // set phase to 0
 
     HAL_Delay(10);
@@ -150,7 +150,7 @@ __STATIC_INLINE void update_pid(){
     if(pid.err_i > pid.i_max) pid.err_i = pid.i_max;
     if(pid.err_i < -pid.i_max) pid.err_i = -pid.i_max;
     
-    PWM_SetDutyCycle(pid.err_i*pid.integ);
+    PWM_SetDutyCycle(pid.err_i*pid.integ+ pid.p*err);
 }
 
 __STATIC_INLINE void pid_reset_to_voltage(){
@@ -176,8 +176,14 @@ static void fsm(void)
         //data.testval=data.v_cap;// debug display output
         protection_triggered=HAL_GetTick();
     }else if(pwm_data.cap_state==VBUS_UVP && pwm_data.v_chassis > BUS_UVP_THRE \
-        && protection_triggered < HAL_GetTick() - 50){ 
+        && protection_triggered <( HAL_GetTick() - 50)){ 
         //recovery from BUS UVP
+        pid_reset();
+        protection_triggered=HAL_GetTick();
+        pwm_data.cap_state=CAP_READY;
+    }else if(pwm_data.cap_state==VBUS_OVP && pwm_data.v_chassis < BUS_OVP_THRE \
+        && protection_triggered <( HAL_GetTick() - 50)){  
+        //recovery from BUS OVP
         pid_reset();
         protection_triggered=HAL_GetTick();
         pwm_data.cap_state=CAP_READY;
@@ -218,14 +224,25 @@ static void fsm(void)
         update_pid();
         break;
     case VBUS_OVP:
+        HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, RESET);// turn off fets
+        HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, LED_OFF);
+        HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, LED_OFF);
+        HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, LED_ON);
+        break;
     case VBUS_UVP:
-        HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, RESET); // turn off fets
+        HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, RESET);// turn off fets
+        HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, LED_ON);
+        HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, LED_OFF);
+        HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, LED_ON); 
         break;
     case VBAT_OVP:
         if(HAL_GetTick() > protection_triggered + PROTECTION_RECOVERY_TIME){
             pid_reset();
             pwm_data.cap_state=CAP_READY;
         }
+        HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, LED_OFF);
+        HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, LED_ON);
+        HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, LED_ON);
         break;
     default:
         pwm_data.cap_state = CAP_OFF;
