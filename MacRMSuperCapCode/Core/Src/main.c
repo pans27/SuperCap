@@ -118,7 +118,8 @@ int main(void)
   while (1)
   {
     //can transmit
-    HAL_Delay(10000);
+    fdcan2_transmit();
+    HAL_Delay(10);
     //send_uart();
     /* USER CODE END WHILE */
 

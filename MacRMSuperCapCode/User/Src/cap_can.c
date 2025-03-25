@@ -33,50 +33,6 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
     }
 }
 
-void fdcan2_config(void)
-{
-
-  sFilterConfig2.IdType = FDCAN_EXTENDED_ID;
-  sFilterConfig2.FilterIndex = 0;
-  sFilterConfig2.FilterType = FDCAN_FILTER_RANGE;
-  sFilterConfig2.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
-  sFilterConfig2.FilterID1 = 0x00;
-  sFilterConfig2.FilterID2 = 0x1FFFFFFF;
-  if (HAL_FDCAN_ConfigFilter(&hfdcan2, &sFilterConfig2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /* Configure global filter on both FDCAN instances:
-  Filter all remote frames with STD and EXT ID
-  Reject non matching frames with STD ID and EXT ID */
-  if (HAL_FDCAN_ConfigGlobalFilter(&hfdcan2, FDCAN_REJECT, FDCAN_REJECT, FDCAN_FILTER_REMOTE, FDCAN_FILTER_REMOTE) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /* Activate Rx FIFO 0 new message notification on both FDCAN instances */
-  if (HAL_FDCAN_ActivateNotification(&hfdcan2, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  if (HAL_FDCAN_ActivateNotification(&hfdcan2, FDCAN_IT_BUS_OFF, 0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /* Configure and enable Tx Delay Compensation, required for BRS mode.
-        TdcOffset default recommended value: DataTimeSeg1 * DataPrescaler
-        TdcFilter default recommended value: 0 */
-  HAL_FDCAN_ConfigTxDelayCompensation(&hfdcan2, hfdcan2.Init.DataPrescaler * hfdcan2.Init.DataTimeSeg1, 0);
-  HAL_FDCAN_EnableTxDelayCompensation(&hfdcan2);
-
-  HAL_FDCAN_Start(&hfdcan2);
-  HAL_FDCAN_ActivateNotification(&hfdcan2, FDCAN_IT_RX_FIFO0_NEW_MESSAGE,0);
-}
-
-
 void fdcan2_transmit(void)
 {
     tx_data.current_chassis_power = (uint16_t)(pwm_data.i_chassis * pwm_data.v_chassis);
