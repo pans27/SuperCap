@@ -13,8 +13,8 @@ uint8_t duty, leftduty, rightduty;
 float target_current;
 
 PID_t pid={
-    .p=50.0f,  //~0.5 ????
-    .integ=29900.0f,
+    .p=0.07f,  //~0.5 ????
+    .integ=60000.0f,
     .d=0.0f,
     .i_max=0.0035f,
     .err_i=0.0f,
@@ -304,8 +304,8 @@ void PWM_Control(void)
 {
     adc_to_voltage_current();
     /*!!!!!!!!!! TO BE SET!!!!!!!!!!!!!!!*/
-    if (master_counter == 1) 
-    { // limit control changes to every other cycle
+    // if (master_counter == 1) 
+    // { // limit control changes to every other cycle
         master_counter = 0;
         //abs(pwm_data.i_bat) < 0.1f || ( abs(pwm_data.v_bat) < 0.1f) ? -pwm_data.i_chassis :
         target_current =  ((pwm_data.power_limit / pwm_data.v_bat) - pwm_data.i_chassis);
@@ -327,9 +327,9 @@ void PWM_Control(void)
         target_current = target_current + pwm_data.i_chassis;
         HAL_IWDG_Refresh(&hiwdg);
         fsm();
-    }
-    else
-    {
-        master_counter++;
-    }
+    // }
+    // else
+    // {
+    //     master_counter++;
+    // }
 }
