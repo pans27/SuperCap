@@ -23,7 +23,6 @@ typedef struct capcan_tx_t{
 }capcan_tx_t;
 
 void CAN_Init(void);
-void CAN_SendData(capcan_tx_t *data);
 void CAN_ReceiveData(capcan_rx_t *data);
-
+void fdcan2_transmit(void);
 #endif // CAP_CAN_H
