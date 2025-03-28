@@ -6,7 +6,7 @@ pwm_adc_t pwm_adc;
 uint32_t ready_time = 0;
 uint32_t powerup_time = 0;
 uint32_t protection_triggered=0;
-uint8_t master_counter = 0;
+uint16_t master_counter = 0;
 uint8_t pwm_msg[] = "hello world\n";
 uint8_t duty, leftduty, rightduty;
 
@@ -129,6 +129,17 @@ void PWM_SetDutyCycle(float dutyCycle)
         leftduty = 255;
         rightduty = (255 - duty) << 1; // multiply by 2
     }
+    if(master_counter==1000){
+        char line[100],line2[100],line3[100];
+        sprintf(line, "bat voltage: %2.3f, cap voltage: %2.3f\r\n", pwm_data.v_bat, pwm_data.v_cap);
+        toUart(line);
+        sprintf(line2,"left duty: %d\r\n", leftduty);
+        toUart(line2);
+        sprintf(line3,"right duty: %d\r\n", rightduty);
+        toUart(line3);
+        master_counter = 0;
+    }
+
     int comp_left = checkCompVal(toCompareVal(leftduty));
     int comp_right = checkCompVal(toCompareVal(rightduty));
     LL_HRTIM_TIM_SetCompare1(HRTIM1, LL_HRTIM_TIMER_A, comp_left);
@@ -306,7 +317,7 @@ void PWM_Control(void)
     /*!!!!!!!!!! TO BE SET!!!!!!!!!!!!!!!*/
     // if (master_counter == 1) 
     // { // limit control changes to every other cycle
-        master_counter = 0;
+        //master_counter = 0;
         //abs(pwm_data.i_bat) < 0.1f || ( abs(pwm_data.v_bat) < 0.1f) ? -pwm_data.i_chassis :
         target_current =  ((pwm_data.power_limit / pwm_data.v_bat) - pwm_data.i_chassis);
         // calculate target current
@@ -330,6 +341,6 @@ void PWM_Control(void)
     // }
     // else
     // {
-    //     master_counter++;
+    master_counter++;
     // }
 }
