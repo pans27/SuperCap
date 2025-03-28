@@ -13,10 +13,10 @@ uint8_t duty, leftduty, rightduty;
 float target_current;
 
 PID_t pid={
-    .p=0.07f,  //~0.5 ????
+    .p=0.07f, 
     .integ=60000.0f,
     .d=0.0f,
-    .i_max=0.0035f,
+    .i_max=0.00175f,
     .err_i=0.0f,
 };
 
