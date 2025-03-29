@@ -6,8 +6,8 @@
 #include "pwm_ctrl.h"
 
 // CAN communication defines
-#define CAN_TX_ID    0x100   // CAN transmit ID
-#define CAN_RX_ID    0x101   // CAN receive ID
+#define CAN_TX_ID    0x301   // CAN transmit ID
+#define CAN_RX_ID    0x302   // CAN receive ID
 
 typedef struct capcan_rx_t{
     uint16_t power_limit;
