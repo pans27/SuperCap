@@ -53,7 +53,7 @@ void PWM_Init(void)
 
     /*!!!!!!!!!!!!!!! TO BE SET!!!!!!!!!!!!!!!!!*/
     PWM_SetDutyCycle(0.0f); // set duty cycle to 0
-    PWM_SetPhase(127);     // set phase to 0
+    PWM_SetPhase(13);     // set phase to 0
 
     HAL_Delay(10);
 
@@ -99,9 +99,9 @@ void PWM_SetPhase(uint8_t phase)
 {
     // currently has inl1 and inr1 in phase, inl2 and inr2 + phase
     int phaseA = PWM_COMPARE_MINVAL;
-    int phaseB = PWM_COMPARE_MINVAL;
-    int phaseC = checkCompVal(PWM_COMPARE_MINVAL + toCompareVal(phase));
-    int phaseE = checkCompVal(PWM_COMPARE_MINVAL + toCompareVal(phase));
+    int phaseB = checkCompVal(PWM_COMPARE_MINVAL + toCompareVal(phase));
+    int phaseC = checkCompVal(PWM_COMPARE_MINVAL + PWM_PERIOD / 2);
+    int phaseE = checkCompVal(PWM_COMPARE_MINVAL + PWM_PERIOD / 2 + toCompareVal(phase));
     LL_HRTIM_TIM_SetCompare1(HRTIM1, LL_HRTIM_TIMER_MASTER, phaseA);
     LL_HRTIM_TIM_SetCompare2(HRTIM1, LL_HRTIM_TIMER_MASTER, phaseB);
     LL_HRTIM_TIM_SetCompare3(HRTIM1, LL_HRTIM_TIMER_MASTER, phaseC);
@@ -119,7 +119,7 @@ void PWM_SetDutyCycle(float dutyCycle)
     duty = (uint8_t)(dutyCycle*255.0f/100.0f);
     // if duty cycle is less than 50%, left side is duty cycle, right side is 100%
     // if duty cycle is more than 50%, left side is 100%, right side is 100%-duty cycle
-    if (duty < 127)
+    if (duty <= 127)
     {
         leftduty = duty << 1; // multiply by 2
         rightduty = 255;
@@ -129,16 +129,16 @@ void PWM_SetDutyCycle(float dutyCycle)
         leftduty = 255;
         rightduty = (255 - duty) << 1; // multiply by 2
     }
-    if(master_counter==1000){
-        char line[100],line2[100],line3[100];
-        sprintf(line, "bat voltage: %2.3f, cap voltage: %2.3f\r\n", pwm_data.v_bat, pwm_data.v_cap);
-        toUart(line);
-        sprintf(line2,"left duty: %d\r\n", leftduty);
-        toUart(line2);
-        sprintf(line3,"right duty: %d\r\n", rightduty);
-        toUart(line3);
-        master_counter = 0;
-    }
+    // if(master_counter==1000){
+    //     char line[100],line2[100],line3[100];
+    //     sprintf(line, "bat voltage: %2.3f, cap voltage: %2.3f\r\n", pwm_data.v_bat, pwm_data.v_cap);
+    //     toUart(line);
+    //     sprintf(line2,"left duty: %d\r\n", leftduty);
+    //     toUart(line2);
+    //     sprintf(line3,"right duty: %d\r\n", rightduty);
+    //     toUart(line3);
+    //     master_counter = 0;
+    // }
 
     int comp_left = checkCompVal(toCompareVal(leftduty));
     int comp_right = checkCompVal(toCompareVal(rightduty));
@@ -168,7 +168,7 @@ __STATIC_INLINE void pid_reset_to_voltage(){
     if(pwm_data.v_bat <= pwm_data.v_cap){
         pid.err_i=(50.0f/pid.integ);  //prevent an agressive capacitor discharge
     }else{
-        float io_ratio=pwm_data.v_cap/(pwm_data.v_bat+0.01f); //NEVER divide by zero
+        float io_ratio=pwm_data.v_cap/(2.0f*(pwm_data.v_bat+0.01f)); //NEVER divide by zero
         pid.err_i=100.0f*(io_ratio/pid.integ); //if v_bat >> v_cap, io_ratio will be small
     }
 }
@@ -176,28 +176,30 @@ __STATIC_INLINE void pid_reset_to_voltage(){
 /*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
 static void fsm(void)
 {
-    if(pwm_data.v_chassis > BUS_OVP_THRE){ //BUS over-voltage protection
-        pwm_data.cap_state=VBUS_OVP;
-        protection_triggered=HAL_GetTick();
-    }else if(pwm_data.v_chassis < BUS_UVP_THRE){ //BUS under-voltage halt
-        pwm_data.cap_state=VBUS_UVP;
-        protection_triggered=HAL_GetTick();
-    }else if(pwm_data.v_cap > BAT_OVP_THRE){ //BAT over-voltage protection
-        pwm_data.cap_state=VBAT_OVP;
-        //data.testval=data.v_cap;// debug display output
-        protection_triggered=HAL_GetTick();
-    }else if(pwm_data.cap_state==VBUS_UVP && pwm_data.v_chassis > BUS_UVP_THRE \
-        && protection_triggered <( HAL_GetTick() - 50)){ 
-        //recovery from BUS UVP
-        pid_reset();
-        protection_triggered=HAL_GetTick();
-        pwm_data.cap_state=CAP_READY;
-    }else if(pwm_data.cap_state==VBUS_OVP && pwm_data.v_chassis < BUS_OVP_THRE \
-        && protection_triggered <( HAL_GetTick() - 50)){  
-        //recovery from BUS OVP
-        pid_reset();
-        protection_triggered=HAL_GetTick();
-        pwm_data.cap_state=CAP_READY;
+    if(pwm_data.cap_state != CAP_READY){
+        if(pwm_data.v_chassis > BUS_OVP_THRE){ //BUS over-voltage protection
+            pwm_data.cap_state=VBUS_OVP;
+            protection_triggered=HAL_GetTick();
+        }else if(pwm_data.v_chassis < BUS_UVP_THRE){ //BUS under-voltage halt
+            pwm_data.cap_state=VBUS_UVP;
+            protection_triggered=HAL_GetTick();
+        }else if(pwm_data.v_cap > BAT_OVP_THRE){ //BAT over-voltage protection
+            pwm_data.cap_state=VBAT_OVP;
+            //data.testval=data.v_cap;// debug display output
+            protection_triggered=HAL_GetTick();
+        }else if(pwm_data.cap_state==VBUS_UVP && pwm_data.v_chassis > BUS_UVP_THRE \
+            && protection_triggered <( HAL_GetTick() - 50)){ 
+            //recovery from BUS UVP
+            pid_reset();
+            protection_triggered=HAL_GetTick();
+            pwm_data.cap_state=CAP_READY;
+        }else if(pwm_data.cap_state==VBUS_OVP && pwm_data.v_chassis < BUS_OVP_THRE \
+            && protection_triggered <( HAL_GetTick() - 50)){  
+            //recovery from BUS OVP
+            pid_reset();
+            protection_triggered=HAL_GetTick();
+            pwm_data.cap_state=CAP_READY;
+        }
     }
 
     switch (pwm_data.cap_state)

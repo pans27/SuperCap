@@ -17,10 +17,10 @@
 #define toCompareVal(p) (p*PWM_PERIOD)/255
 
 /************SAFETY SETTINGS**********/
-#define BUS_UVP_THRE 10.0f
-#define BUS_OVP_THRE 23.5f
-#define BAT_OVP_THRE 21.0f
-#define BAT_FULL_VOL 19.0f
+#define BUS_UVP_THRE 18.0f
+#define BUS_OVP_THRE 28.5f
+#define BAT_OVP_THRE 30.0f
+#define BAT_FULL_VOL 23.5f
 #define BAT_UVP_STARTUP_THRE 10.0f
 
 #define PROTECTION_RECOVERY_TIME 2000
@@ -30,7 +30,7 @@
 #define POWER_LIMIT_MINIMUM 15.0f
 #define POWER_LIMIT_MAXIMUM 350.0f
 
-#define ONTIME_FILTERSTABLE_DELAY 5
+#define ONTIME_FILTERSTABLE_DELAY 10
 /*************************************/
 
 #define IIR_V 0.1f
