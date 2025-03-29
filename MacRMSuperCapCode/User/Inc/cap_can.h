@@ -11,8 +11,8 @@
 
 typedef struct capcan_rx_t{
     uint16_t power_limit;
-    uint16_t rsvd1;
-    uint16_t rsvd2;
+    uint16_t buffer;
+    uint16_t rsv2;
 }capcan_rx_t;
 
 typedef struct capcan_tx_t{
