@@ -111,6 +111,7 @@ int main(void)
   PWM_Init();
   HAL_IWDG_Refresh(&hiwdg);
   LL_HRTIM_TIM_CounterEnable(HRTIM1, LL_HRTIM_TIMER_ALL);
+  fdcan2_config();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -118,7 +119,8 @@ int main(void)
   while (1)
   {
     //can transmit
-    fdcan2_transmit();
+    //fdcan2_config();
+    cap_transmit();
     HAL_Delay(10);
     //send_uart();
     /* USER CODE END WHILE */
