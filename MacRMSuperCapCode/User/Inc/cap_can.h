@@ -22,7 +22,16 @@ typedef struct capcan_tx_t{
     uint16_t cap_state;
 }capcan_tx_t;
 
+// Structure to store FDCAN send failure information
+typedef struct {
+  uint8_t flag; // Flag to indicate send failure
+  FDCAN_TxHeaderTypeDef TxHeader; // Store Tx header of failed message
+  uint8_t TxData[64]; // Store Tx data of failed message
+} FDCAN_SendFailTypeDef;
+
 void CAN_Init(void);
 void CAN_ReceiveData(capcan_rx_t *data);
-void fdcan2_transmit(void);
+void fdcan2_transmit(uint32_t can_id, uint32_t DataLength, uint8_t tx_data[]);
+void fdcan2_config(void);
+void cap_transmit(void);
 #endif // CAP_CAN_H

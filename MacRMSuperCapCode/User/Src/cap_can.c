@@ -39,6 +39,6 @@ void fdcan2_transmit(void)
     tx_data.current_battery_power = (uint16_t)(pwm_data.i_bat * pwm_data.v_bat);
     tx_data.cap_voltage = (uint16_t)pwm_data.v_cap;
     tx_data.cap_state = (uint16_t)pwm_data.cap_state;
-    HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &TxHeader2, (uint8_t *)&tx_data);
+    fdcan2_transmit(CAN_TX_ID, FDCAN_DLC_BYTES_8, (uint8_t*)&tx_data);
 }
 
