@@ -20,6 +20,9 @@ PID_t pid={
     .err_i=0.0f,
 };
 
+#define DISABLE_FETS 0 // set to 1 to disable FETs
+
+static void cap_fsm(void);
 // Function to initialize PWM
 void PWM_Init(void)
 {
@@ -174,7 +177,7 @@ __STATIC_INLINE void pid_reset_to_voltage(){
 }
 
 /*!!!!!!!!!!!!!!! ALGORITHM NEEDED!!!!!!!!!!!!!!!!!*/
-static void fsm(void)
+static void cap_fsm(void)
 {
     if(pwm_data.cap_state != CAP_READY){
         if(pwm_data.v_chassis > BUS_OVP_THRE){ //BUS over-voltage protection
@@ -205,11 +208,21 @@ static void fsm(void)
     switch (pwm_data.cap_state)
     {
     case CAP_OFF:
+#if (DISABLE_FETS)
+        
+            HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, GPIO_PIN_RESET); // turn off fets
+        
+#endif
         HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, LED_ON);
         HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, LED_OFF);
         HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, LED_OFF);
         break;
     case CAP_READY:
+#if (DISABLE_FETS)
+        
+            HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, GPIO_PIN_RESET); // turn off fets
+        
+#endif
         HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, LED_ON);
         HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, LED_ON);
         HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, LED_OFF);
@@ -227,17 +240,24 @@ static void fsm(void)
             pid_reset_to_voltage();
             pwm_data.cap_state = CAP_ON;
             powerup_time = HAL_GetTick();
-            HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, SET); // turn on fets
+#if (!DISABLE_FETS)
+            HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, GPIO_PIN_SET); // turn on fets
+#endif
         }
         break;
     case CAP_ON:
+#if (DISABLE_FETS)
+        
+            HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, GPIO_PIN_RESET); // turn off fets
+        
+#endif
         HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, LED_OFF);
         HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, LED_ON);
         HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, LED_OFF);
         update_pid();
         break;
     case VBUS_OVP:
-        HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, RESET);// turn off fets
+        HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, GPIO_PIN_RESET);// turn off fets
         HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, LED_OFF);
         HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, LED_OFF);
         HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, LED_ON);
@@ -249,10 +269,20 @@ static void fsm(void)
         HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, LED_ON); 
         break;
     case VBAT_OVP:
+#if (DISABLE_FETS)
+        
+            HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, GPIO_PIN_RESET); // turn off fets
+        
+#endif
         if(HAL_GetTick() > protection_triggered + PROTECTION_RECOVERY_TIME){
             pid_reset();
             pwm_data.cap_state=CAP_READY;
         }
+#if (DISABLE_FETS)
+        
+            HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, GPIO_PIN_RESET); // turn off fets
+        
+#endif
         HAL_GPIO_WritePin(R_GPIO_Port, R_Pin, LED_OFF);
         HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, LED_ON);
         HAL_GPIO_WritePin(B_GPIO_Port, B_Pin, LED_ON);
@@ -339,7 +369,7 @@ void PWM_Control(void)
                              (target_current < -discharge_maxi) ? -discharge_maxi : target_current;
         target_current = target_current + pwm_data.i_chassis;
         HAL_IWDG_Refresh(&hiwdg);
-        fsm();
+        cap_fsm();
     // }
     // else
     // {

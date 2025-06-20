@@ -95,5 +95,6 @@ void PWM_Control(void);
 void PWM_UpdateLimits(float limit);
 void toUart( char *ptr);
 void send_uart(void);
+static void cap_fsm(void);
 
 #endif // PWM_CTRL_H
