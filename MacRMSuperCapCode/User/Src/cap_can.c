@@ -24,6 +24,11 @@ uint8_t dlc2len[]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 extern pwm_data_t pwm_data;
 
+static float filtered_battery_power = 0.0f;
+static float filtered_chassis_power = 0.0f;
+
+#define POWER_FILTER_ALPHA 0.1f
+
 // FDCAN Rx FIFO 0 callback function
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 {
@@ -129,8 +134,19 @@ void fdcan2_transmit(uint32_t can_id, uint32_t DataLength, uint8_t tx_data[])
 // Function to transmit cap data
 void cap_transmit(void)
 {
-    tx_data.current_chassis_power = (uint16_t)(pwm_data.i_chassis * pwm_data.v_chassis);
-    tx_data.current_battery_power = (uint16_t)(pwm_data.i_bat * pwm_data.v_bat);
+    // Calculate raw power values
+    float raw_chassis_power = pwm_data.i_chassis * pwm_data.v_chassis;
+    float raw_battery_power = pwm_data.i_bat * pwm_data.v_bat;
+
+    // Apply first order low pass filter
+    filtered_chassis_power = POWER_FILTER_ALPHA * raw_chassis_power +
+                             (1.0f - POWER_FILTER_ALPHA) * filtered_chassis_power;
+
+    filtered_battery_power = POWER_FILTER_ALPHA * raw_battery_power +
+                             (1.0f - POWER_FILTER_ALPHA) * filtered_battery_power;
+
+    tx_data.current_chassis_power = (uint16_t)filtered_chassis_power;
+    tx_data.current_battery_power = (uint16_t)filtered_battery_power;
     tx_data.cap_voltage = (uint16_t)pwm_data.v_cap;
     tx_data.cap_state = (uint16_t)pwm_data.cap_state;
     fdcan2_transmit(CAN_TX_ID, FDCAN_DLC_BYTES_8, (uint8_t*)&tx_data);
