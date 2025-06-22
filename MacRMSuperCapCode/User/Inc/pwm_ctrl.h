@@ -27,7 +27,7 @@
 
 #define CAP_MAX_CURRENT 13.8f
 
-#define POWER_LIMIT_MINIMUM 15.0f
+#define POWER_LIMIT_MINIMUM 55.0f
 #define POWER_LIMIT_MAXIMUM 350.0f
 
 #define ONTIME_FILTERSTABLE_DELAY 10
@@ -38,7 +38,7 @@
 #define I_CAP_COE 0.72f
 #define I_CHASSIS_COE 0.63f
 #define I_BAT_COE 0.65f
-#define V_REF 3.23f
+#define V_REF 3.22f
 
 #define DT (1.0f/400000.0f) // 5 x PWM period
 
