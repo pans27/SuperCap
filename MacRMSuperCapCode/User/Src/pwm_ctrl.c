@@ -1,7 +1,7 @@
 #include "pwm_ctrl.h"
 
 volatile uint8_t uart_tx_done = 1;
-pwm_data_t pwm_data = {.cap_state = CAP_OFF, .power_limit = 15.0f};
+pwm_data_t pwm_data = {.cap_state = CAP_OFF, .power_limit = 55.0f};
 pwm_adc_t pwm_adc;
 uint32_t ready_time = 0;
 uint32_t powerup_time = 0;
@@ -313,11 +313,11 @@ void PWM_UpdateLimits(float limit)
 __STATIC_INLINE void adc_to_voltage_current(void)
 {
     pwm_data.v_cap = (pwm_adc.v_cap * V_REF) / 4095.0f * 11.0f * IIR_V + pwm_data.v_cap * (1 - IIR_V);
-    pwm_data.i_cap = (((pwm_adc.i_cap * V_REF) / 4095.0f) - V_REF/2.0f) * 20.0f * I_CAP_COE * IIR_C + pwm_data.i_cap * (1 - IIR_C);
-    pwm_data.i_chassis = ((((pwm_adc.i_chassis * V_REF) / 4095.0f) - V_REF/2.0f) * 20.0f * I_CHASSIS_COE + 0.1f)* IIR_C + pwm_data.i_chassis * (1 - IIR_C);
+    pwm_data.i_cap = (((pwm_adc.i_cap * V_REF) / 4095.0f) - V_REF/2.0f) * 20.0f * IIR_C + pwm_data.i_cap * (1 - IIR_C);
+    pwm_data.i_chassis = ((((pwm_adc.i_chassis * V_REF) / 4095.0f) - V_REF/2.0f) * 20.0f + 0.1f)* IIR_C + pwm_data.i_chassis * (1 - IIR_C);
     pwm_data.v_bat = (pwm_adc.v_bat * V_REF) / 4095.0f * 11.0f * IIR_V + pwm_data.v_bat * (1 - IIR_V);
     pwm_data.v_chassis = (pwm_adc.v_chassis * V_REF) / 4095.0f * 11.0f * IIR_V + pwm_data.v_chassis * (1 - IIR_V);
-    pwm_data.i_bat = ((((pwm_adc.i_bat * V_REF) / 4095.0f) - V_REF/2.0f) * 20.0f * I_BAT_COE + 0.1f)* IIR_C + pwm_data.i_bat * (1 - IIR_C);
+    pwm_data.i_bat = ((((pwm_adc.i_bat * V_REF) / 4095.0f) - V_REF/2.0f) * 20.0f + 0.1f)* IIR_C + pwm_data.i_bat * (1 - IIR_C);
 }
 
 void send_uart(void)
