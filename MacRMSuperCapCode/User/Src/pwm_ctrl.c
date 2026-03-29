@@ -12,6 +12,23 @@ uint8_t duty, leftduty, rightduty;
 
 float target_current;
 
+typedef struct
+{
+    float history[3];
+    float filtered;
+    uint8_t history_index;
+    uint8_t initialized;
+} current_filter_t;
+
+static current_filter_t i_cap_filter;
+static current_filter_t i_chassis_filter;
+static current_filter_t i_bat_filter;
+
+#define CURRENT_FILTER_ALPHA_FAST 0.22f
+#define CURRENT_FILTER_ALPHA_SLOW 0.06f
+#define CURRENT_FILTER_BASE_STEP 0.35f
+#define CURRENT_FILTER_REL_STEP 0.08f
+
 PID_t pid={
     .p=0.07f, 
     .integ=60000.0f,
@@ -23,6 +40,91 @@ PID_t pid={
 #define DISABLE_FETS 0 // set to 1 to disable FETs
 
 static void cap_fsm(void);
+
+__STATIC_INLINE float filter_absf(float value)
+{
+    return value < 0.0f ? -value : value;
+}
+
+__STATIC_INLINE float filter_clampf(float value, float min_value, float max_value)
+{
+    if (value < min_value)
+    {
+        return min_value;
+    }
+    if (value > max_value)
+    {
+        return max_value;
+    }
+    return value;
+}
+
+__STATIC_INLINE float median3f(float a, float b, float c)
+{
+    if (a > b)
+    {
+        float temp = a;
+        a = b;
+        b = temp;
+    }
+    if (b > c)
+    {
+        float temp = b;
+        b = c;
+        c = temp;
+    }
+    if (a > b)
+    {
+        float temp = a;
+        a = b;
+        b = temp;
+    }
+    return b;
+}
+
+static void current_filter_reset(current_filter_t *filter, float sample)
+{
+    filter->history[0] = sample;
+    filter->history[1] = sample;
+    filter->history[2] = sample;
+    filter->filtered = sample;
+    filter->history_index = 0;
+    filter->initialized = 1;
+}
+
+__STATIC_INLINE float current_filter_update(current_filter_t *filter, float sample, uint8_t fast_track)
+{
+    if (!filter->initialized)
+    {
+        current_filter_reset(filter, sample);
+        return sample;
+    }
+
+    filter->history[filter->history_index] = sample;
+    filter->history_index = (filter->history_index + 1U) % 3U;
+
+    float candidate = median3f(filter->history[0], filter->history[1], filter->history[2]);
+    float step_limit = CURRENT_FILTER_BASE_STEP + CURRENT_FILTER_REL_STEP * filter_absf(filter->filtered);
+    float raw_delta = candidate - filter->filtered;
+    float limited_delta;
+    float alpha;
+
+    if (fast_track)
+    {
+        step_limit *= 2.5f;
+        alpha = CURRENT_FILTER_ALPHA_FAST;
+    }
+    else
+    {
+        alpha = (filter_absf(raw_delta) > step_limit) ? CURRENT_FILTER_ALPHA_SLOW : CURRENT_FILTER_ALPHA_FAST;
+    }
+
+    limited_delta = filter_clampf(raw_delta, -step_limit, step_limit);
+    filter->filtered += alpha * limited_delta;
+
+    return filter->filtered;
+}
+
 // Function to initialize PWM
 void PWM_Init(void)
 {
@@ -312,12 +414,17 @@ void PWM_UpdateLimits(float limit)
 /*!!!!!!!!!!!!!!! IIR FILTER USED!!!!!!!!!!!!!!!!!*/
 __STATIC_INLINE void adc_to_voltage_current(void)
 {
+    float i_cap_raw = (((pwm_adc.i_cap * V_REF) / 4095.0f) - V_REF/2.0f) * 20.0f;
+    float i_chassis_raw = ((((pwm_adc.i_chassis * V_REF) / 4095.0f) - V_REF/2.0f) * 20.0f + 0.1f);
+    float i_bat_raw = ((((pwm_adc.i_bat * V_REF) / 4095.0f) - V_REF/2.0f) * 20.0f + 0.1f);
+    uint8_t fast_track = (pwm_data.cap_state != CAP_ON);
+
     pwm_data.v_cap = (pwm_adc.v_cap * V_REF) / 4095.0f * 11.0f * IIR_V + pwm_data.v_cap * (1 - IIR_V);
-    pwm_data.i_cap = (((pwm_adc.i_cap * V_REF) / 4095.0f) - V_REF/2.0f) * 20.0f * IIR_C + pwm_data.i_cap * (1 - IIR_C);
-    pwm_data.i_chassis = ((((pwm_adc.i_chassis * V_REF) / 4095.0f) - V_REF/2.0f) * 20.0f + 0.1f)* IIR_C + pwm_data.i_chassis * (1 - IIR_C);
+    pwm_data.i_cap = current_filter_update(&i_cap_filter, i_cap_raw, fast_track);
+    pwm_data.i_chassis = current_filter_update(&i_chassis_filter, i_chassis_raw, fast_track);
     pwm_data.v_bat = (pwm_adc.v_bat * V_REF) / 4095.0f * 11.0f * IIR_V + pwm_data.v_bat * (1 - IIR_V);
     pwm_data.v_chassis = (pwm_adc.v_chassis * V_REF) / 4095.0f * 11.0f * IIR_V + pwm_data.v_chassis * (1 - IIR_V);
-    pwm_data.i_bat = ((((pwm_adc.i_bat * V_REF) / 4095.0f) - V_REF/2.0f) * 20.0f + 0.1f)* IIR_C + pwm_data.i_bat * (1 - IIR_C);
+    pwm_data.i_bat = current_filter_update(&i_bat_filter, i_bat_raw, fast_track);
 }
 
 void send_uart(void)
@@ -356,7 +463,7 @@ void PWM_Control(void)
 
         // FIXME: need math calculation
         //abs(pwm_data.i_bat) < 0.1f || ??
-        float lim_judge = (abs(pwm_data.v_bat) < 0.1f ) ? CAP_MAX_CURRENT : (CAP_MAX_CURRENT * (pwm_data.v_cap / pwm_data.v_bat));
+        float lim_judge = (filter_absf(pwm_data.v_bat) < 0.1f ) ? CAP_MAX_CURRENT : (CAP_MAX_CURRENT * (pwm_data.v_cap / pwm_data.v_bat));
         float lim_capfull = (BAT_FULL_VOL - pwm_data.v_cap) * 7.0f;
         float lim_caplow = (pwm_data.v_cap - BAT_UVP_STARTUP_THRE) * 5.0f;
 
